@@ -88,10 +88,10 @@ public abstract class BaseWebSocketChannel<
 
   @Override
   public final void onMessage(AnyWebSocketMessage message, WebSocketSession session) {
-    synchronized (consumers) {
-      Message casted = tryCast(message);
-      if (casted != null) {
-        Data data = getData(casted);
+    Message casted = tryCast(message);
+    if (casted != null) {
+      Data data = getData(casted);
+      synchronized (consumers) {
         consumers.forEach(consumer -> consumer.onNext(data));
       }
     }
@@ -139,11 +139,11 @@ public abstract class BaseWebSocketChannel<
   }
 
   private void setState(SubscriptionState state) {
-    synchronized (consumers) {
-      synchronized (stateHolder) {
+    synchronized (stateHolder) {
+      synchronized (consumers) {
         consumers.forEach(consumer -> consumer.onStateChange(state));
-        stateHolder.set(state);
       }
+      stateHolder.set(state);
     }
   }
 }

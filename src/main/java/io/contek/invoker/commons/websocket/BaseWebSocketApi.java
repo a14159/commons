@@ -105,15 +105,16 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
       checkErrorMessage(message);
       synchronized (sessionHolder) {
         WebSocketSession session = sessionHolder.get();
+
+        synchronized (liveKeeper) {
+          liveKeeper.onMessage(message, session);
+        }
+        synchronized (authenticator) {
+          if (!authenticator.isCompleted()) {
+            authenticator.onMessage(message, session);
+          }
+        }
         synchronized (components) {
-          synchronized (liveKeeper) {
-            liveKeeper.onMessage(message, session);
-          }
-          synchronized (authenticator) {
-            if (!authenticator.isCompleted()) {
-              authenticator.onMessage(message, session);
-            }
-          }
           components.onMessage(message, session);
         }
       }
@@ -150,12 +151,12 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
       sessionHolder.set(null);
       synchronized (components) {
         components.afterDisconnect();
-        synchronized (liveKeeper) {
-          liveKeeper.afterDisconnect();
-        }
-        synchronized (authenticator) {
-          authenticator.afterDisconnect();
-        }
+      }
+      synchronized (liveKeeper) {
+        liveKeeper.afterDisconnect();
+      }
+      synchronized (authenticator) {
+        authenticator.afterDisconnect();
       }
     }
   }
