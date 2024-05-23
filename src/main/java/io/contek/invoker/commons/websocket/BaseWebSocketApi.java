@@ -255,21 +255,21 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
     @Override
     public void onFailure(WebSocket ws, Throwable t, @Nullable Response response) {
       if (t instanceof SocketTimeoutException) {
-        log.warn("Shutting down inactive session.", t);
+        log.warn("Shutting down inactive session: {}", t.getMessage());
       } else if (t instanceof EOFException) {
-        log.warn("Server closed connection.", t);
+        log.warn("Server closed connection {}", t.getMessage());
       } else if (t instanceof IOException) {
-        log.warn("Connection interrupted.", t);
+        log.warn("Connection interrupted {}", t.getMessage());
       } else if (t instanceof WebSocketServerRestartException) {
-        log.warn("Server requires restart.", t);
+        log.warn("Server requires restart {}", t.getMessage());
       } else if (t instanceof WebSocketSessionExpiredException) {
-        log.warn("Session is expired.", t);
+        log.warn("Session is expired {}", t.getMessage());
       } else if (t instanceof WebSocketSessionInactiveException) {
-        log.warn("Session is inactive.", t);
+        log.warn("Session is inactive {}", t.getMessage());
       } else if (t instanceof WebSocketIllegalSequenceException) {
-        log.warn("Received out of order message.", t);
+        log.warn("Received out of order message {}", t.getMessage());
       } else if (t instanceof WebSocketIllegalStateException) {
-        log.warn("Channel has invalid state.", t);
+        log.warn("Channel has invalid state {}", t.getMessage());
       } else {
         log.error("Encountered unknown error: {}.", response, t);
       }
