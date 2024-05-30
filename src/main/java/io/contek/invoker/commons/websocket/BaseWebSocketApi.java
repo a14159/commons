@@ -189,7 +189,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
             try {
               liveKeeper.onHeartbeat(session);
             } catch (WebSocketSessionInactiveException e) {
-              log.warn("WebSocket session is inactive", e);
+              log.warn("WebSocket session is inactive {}", e.getMessage());
               session.close();
             }
           }
