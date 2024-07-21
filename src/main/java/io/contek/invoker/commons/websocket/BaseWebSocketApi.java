@@ -32,6 +32,10 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
 
   private static final Logger log = getLogger(BaseWebSocketApi.class);
 
+  private static int id = 0;
+
+  private final int connectionId;
+
   private final IActor actor;
   private final IWebSocketMessageParser parser;
   private final IWebSocketAuthenticator authenticator;
@@ -53,6 +57,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
     this.parser = parser;
     this.authenticator = authenticator;
     this.liveKeeper = liveKeeper;
+    this.connectionId = ++id;
   }
 
   public final boolean isActive() {
@@ -68,6 +73,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
       components.attach(component);
       activate();
     }
+    log.info("Attaching subscription {} to ws connection #{}", component, connectionId);
   }
 
   protected final IWebSocketMessageParser getParser() {
@@ -180,7 +186,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
           }
 
           if (!components.hasActiveComponent()) {
-            log.info("No active components. Closing session.");
+            log.info("No active components. Closing session #{}.", connectionId);
             session.close();
             return;
           }
@@ -189,7 +195,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
             try {
               liveKeeper.onHeartbeat(session);
             } catch (WebSocketSessionInactiveException e) {
-              log.warn("WebSocket session is inactive {}", e.getMessage());
+              log.warn("WebSocket session #{} is inactive {}", connectionId, e.getMessage());
               session.close();
             }
           }
@@ -208,7 +214,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
         }
       }
     } catch (Throwable t) {
-      log.error("Heartbeat failed.", t);
+      log.error("Heartbeat failed for ws #{}", connectionId, t);
     }
   }
 
@@ -219,6 +225,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
             if (oldValue != null && !oldValue.isDone()) {
               return oldValue;
             }
+            log.debug("WS connection #{} is now active", connectionId);
             return scheduler.scheduleWithFixedDelay(this::heartbeat, 0, 1, TimeUnit.SECONDS);
           });
     }
@@ -237,6 +244,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
             return null;
           });
     }
+    log.debug("WS connection #{} is now deactivated", connectionId);
   }
 
   @ThreadSafe
@@ -244,7 +252,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
 
     @Override
     public void onClosed(WebSocket ws, int code, String reason) {
-      log.info("Session is closed: {} {}.", code, reason);
+      log.info("Session #{} is closed: {} {}.", connectionId, code, reason);
       try {
         afterDisconnect();
       } catch (Throwable t) {
@@ -255,27 +263,27 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
     @Override
     public void onFailure(WebSocket ws, Throwable t, @Nullable Response response) {
       if (t instanceof SocketTimeoutException) {
-        log.warn("Shutting down inactive session: SocketTimeoutException {}", t.getMessage());
+        log.warn("Shutting down inactive session #{}: SocketTimeoutException {}", connectionId, t.getMessage());
       } else if (t instanceof EOFException) {
-        log.warn("Server closed connection {} EOFException", t.getMessage());
+        log.warn("Server closed connection  #{} EOFException: {} ", connectionId, t.getMessage());
       } else if (t instanceof IOException) {
-        log.warn("Connection interrupted {} IOException", t.getMessage());
+        log.warn("Connection #{} interrupted {} IOException", connectionId, t.getMessage());
       } else if (t instanceof WebSocketServerRestartException) {
-        log.warn("Server requires restart {} WebSocketServerRestartException", t.getMessage());
+        log.warn("Server requires restart {} for #{} WebSocketServerRestartException", connectionId, t.getMessage());
       } else if (t instanceof WebSocketSessionExpiredException) {
-        log.warn("Session is expired {} WebSocketSessionExpiredException", t.getMessage());
+        log.warn("Session #{} expired WebSocketSessionExpiredException {}", connectionId, t.getMessage());
       } else if (t instanceof WebSocketSessionInactiveException) {
-        log.warn("Session is inactive {} WebSocketSessionInactiveException", t.getMessage());
+        log.warn("Session #{} is inactive WebSocketSessionInactiveException {}", connectionId, t.getMessage());
       } else if (t instanceof WebSocketIllegalSequenceException) {
-        log.warn("Received out of order message {} WebSocketIllegalSequenceException", t.getMessage());
+        log.warn("Received out of order message for #{} WebSocketIllegalSequenceException: {}", connectionId, t.getMessage());
       } else if (t instanceof WebSocketIllegalStateException) {
-        log.warn("Channel has invalid state {} WebSocketIllegalStateException", t.getMessage());
+        log.warn("Channel #{} has invalid state {} WebSocketIllegalStateException", connectionId, t.getMessage());
       } else {
-        log.error("Encountered unknown error: {}.", response, t);
+        log.error("Encountered unknown error for ws #{}: {}", connectionId, response, t);
       }
 
       try {
-        log.info("Closing connection.");
+        log.info("Closing connection #{}.", connectionId);
         ws.cancel();
         afterDisconnect();
         log.info("Component states reset.");
@@ -296,7 +304,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
 
     @Override
     public void onOpen(WebSocket ws, Response response) {
-      log.info("Session is open: {}.", response);
+      log.info("WS {} connection #{} is open: {}.", actor.getCredential().isAnonymous() ? "public" : "private",connectionId, response);
     }
   }
 }
