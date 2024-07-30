@@ -53,13 +53,13 @@ public abstract class BaseWebSocketChannel<
         SubscriptionState currentState = stateHolder.get();
         SubscriptionState newState = null;
         if (currentState == SUBSCRIBED && childConsumerState == IDLE) {
-          log.info("Unsubscribing channel {}.", id);
+          log.debug("Unsubscribing channel {}.", id);
           newState = unsubscribe(session);
           if (newState == SUBSCRIBED || newState == SUBSCRIBING) {
             log.error("Channel {} has invalid state after unsubscribe: {}.", id, newState);
           }
         } else if (currentState == UNSUBSCRIBED && childConsumerState == ACTIVE) {
-          log.info("Subscribing channel {}.", id);
+          log.debug("Subscribing channel {}.", id);
           newState = subscribe(session);
           if (newState == UNSUBSCRIBED || newState == UNSUBSCRIBING) {
             log.error("Channel {} has invalid state after subscribe: {}.", id, newState);
