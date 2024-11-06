@@ -1,6 +1,7 @@
 package io.contek.invoker.commons.websocket;
 
 import com.google.common.collect.ImmutableList;
+import io.contek.invoker.commons.MetricsRecorder;
 import io.contek.invoker.commons.actor.IActor;
 import io.contek.invoker.commons.actor.RequestContext;
 import io.contek.invoker.commons.actor.http.HttpBusyException;
@@ -47,6 +48,13 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
   private final AtomicReference<WebSocketSession> sessionHolder = new AtomicReference<>();
   private final AtomicReference<ScheduledFuture<?>> scheduleHolder = new AtomicReference<>();
   private final WebSocketComponentManager components = new WebSocketComponentManager();
+
+  private static final MetricsRecorder metrics = MetricsRecorder.getRecorder("e2eLatency#parseJson");
+  static {
+    metrics.setPrintInterval(200);
+    metrics.setPrintFullStats(true);
+    metrics.setTimeMicro();
+  }
 
   protected BaseWebSocketApi(
       IActor actor,
@@ -96,7 +104,9 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
       throws WebSocketRuntimeException;
 
   private void forwardMessage(String text) {
+    long startTime = System.nanoTime();
     ParseResult result = parser.parse(text);
+    metrics.recordInvocation((System.nanoTime() - startTime) / 1000, true);
     forwardMessage(result);
   }
 

@@ -1,12 +1,20 @@
 package io.contek.invoker.commons.websocket;
 
 import com.alibaba.fastjson2.JSON;
+import io.contek.invoker.commons.MetricsRecorder;
 import okhttp3.WebSocket;
 
 import javax.annotation.concurrent.ThreadSafe;
 
 @ThreadSafe
 public final class WebSocketSession {
+
+  private static final MetricsRecorder metrics = MetricsRecorder.getRecorder("e2eLatency#generateJsonAndPush");
+  static {
+    metrics.setPrintInterval(200);
+    metrics.setPrintFullStats(true);
+    metrics.setTimeMicro();
+  }
 
   private final WebSocket ws;
 
@@ -20,7 +28,9 @@ public final class WebSocketSession {
       return;
     }
 
+    long startTime = System.nanoTime();
     ws.send(JSON.toJSONString(message));
+    metrics.recordInvocation((System.nanoTime() - startTime) / 1000, true);
   }
 
   void close() {
