@@ -51,7 +51,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
 
   private static final MetricsRecorder metrics = MetricsRecorder.getRecorder("e2eLatency#parseJson");
   static {
-    metrics.setPrintInterval(200);
+    metrics.setPrintInterval(500);
     metrics.setPrintFullStats(true);
     metrics.setTimeMicro();
   }
