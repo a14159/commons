@@ -33,6 +33,8 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
 
   private static final Logger log = getLogger(BaseWebSocketApi.class);
 
+  public static final boolean METRICS = false; // javac should remove the corresponding code
+
   private static int id = 0;
 
   private final int connectionId;
@@ -51,7 +53,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
 
   private static final MetricsRecorder metrics = MetricsRecorder.getRecorder("e2eLatency#parseJson");
   static {
-    metrics.setPrintInterval(500);
+    metrics.setPrintInterval(1000);
     metrics.setPrintFullStats(true);
     metrics.setTimeMicro();
   }
@@ -104,10 +106,15 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
       throws WebSocketRuntimeException;
 
   private void forwardMessage(String text) {
-    long startTime = System.nanoTime();
-    ParseResult result = parser.parse(text);
-    metrics.recordInvocation((System.nanoTime() - startTime) / 1000, true);
-    forwardMessage(result);
+    if (METRICS) {
+      long startTime = System.nanoTime();
+      ParseResult result = parser.parse(text);
+      metrics.recordInvocation((System.nanoTime() - startTime) / 1000, true);
+      forwardMessage(result);
+    } else {
+      ParseResult result = parser.parse(text);
+      forwardMessage(result);
+    }
   }
 
   private void forwardMessage(ByteString bytes) {

@@ -9,6 +9,8 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public final class WebSocketSession {
 
+  public static final boolean METRICS = false; // javac should remove the corresponding code
+
   private static final MetricsRecorder metrics = MetricsRecorder.getRecorder("e2eLatency#generateJsonAndPush");
   static {
     metrics.setPrintInterval(200);
@@ -28,9 +30,13 @@ public final class WebSocketSession {
       return;
     }
 
-    long startTime = System.nanoTime();
-    ws.send(JSON.toJSONString(message));
-    metrics.recordInvocation((System.nanoTime() - startTime) / 1000, true);
+    if (METRICS) {
+      long startTime = System.nanoTime();
+      ws.send(JSON.toJSONString(message));
+      metrics.recordInvocation((System.nanoTime() - startTime) / 1000, true);
+    } else {
+      ws.send(JSON.toJSONString(message));
+    }
   }
 
   void close() {
