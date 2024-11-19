@@ -13,8 +13,9 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.EOFException;
@@ -26,12 +27,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
-import static org.slf4j.LoggerFactory.getLogger;
 
 @ThreadSafe
 public abstract class BaseWebSocketApi implements IWebSocketApi {
 
-  private static final Logger log = getLogger(BaseWebSocketApi.class);
+  private static final Logger log = LogManager.getLogger(BaseWebSocketApi.class);
 
   public static final boolean METRICS = false; // javac should remove the corresponding code
 

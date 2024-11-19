@@ -1,8 +1,8 @@
 package io.contek.invoker.commons;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class MetricsRecorder {
 
-    private static final Logger l = LoggerFactory.getLogger(MetricsRecorder.class);
+    private static final Logger l = LogManager.getLogger(MetricsRecorder.class);
 
     public static final int HISTORY = 100;
     private static final Map<String, MetricsRecorder> metrics = new ConcurrentHashMap<>();

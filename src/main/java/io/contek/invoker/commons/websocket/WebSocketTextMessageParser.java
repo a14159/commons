@@ -1,15 +1,16 @@
 package io.contek.invoker.commons.websocket;
 
-import org.slf4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-import static org.slf4j.LoggerFactory.getLogger;
 
 @ThreadSafe
 public abstract class WebSocketTextMessageParser implements IWebSocketMessageParser {
 
-  private static final Logger log = getLogger(WebSocketTextMessageParser.class);
+  private static final Logger log = LogManager.getLogger(WebSocketTextMessageParser.class);
 
   @Override
   public final ParseResult parse(String text) {

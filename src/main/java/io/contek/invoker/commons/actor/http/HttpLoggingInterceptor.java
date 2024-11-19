@@ -5,19 +5,19 @@ import okhttp3.*;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
-import org.slf4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.slf4j.LoggerFactory.getLogger;
 
 @ThreadSafe
 public final class HttpLoggingInterceptor implements Interceptor {
 
-  private static final Logger log = getLogger(HttpLoggingInterceptor.class);
+  private static final Logger log = LogManager.getLogger(HttpLoggingInterceptor.class);
 
   private static final Joiner HEADER_JOINER = Joiner.on(',');
 

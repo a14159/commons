@@ -1,6 +1,7 @@
 package io.contek.invoker.commons.websocket;
 
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
@@ -10,14 +11,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static io.contek.invoker.commons.websocket.ConsumerState.*;
 import static io.contek.invoker.commons.websocket.SubscriptionState.*;
-import static org.slf4j.LoggerFactory.getLogger;
 
 @ThreadSafe
 public abstract class BaseWebSocketChannel<
         Id extends BaseWebSocketChannelId<Message>, Message extends AnyWebSocketMessage, Data>
     implements IWebSocketComponent, IWebSocketChannel<Data> {
 
-  private static final Logger log = getLogger(BaseWebSocketChannel.class);
+  private static final Logger log = LogManager.getLogger(BaseWebSocketChannel.class);
 
   private final Id id;
 
