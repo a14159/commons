@@ -20,7 +20,7 @@
         <dependency>
             <groupId>io.contek.invoker</groupId>
             <artifactId>invoker-security</artifactId>
-            <version>3.6.19</version>
+            <version>3.6.19-head</version>
         </dependency>
 
         <dependency>
