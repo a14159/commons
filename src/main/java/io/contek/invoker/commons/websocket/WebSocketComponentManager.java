@@ -1,17 +1,37 @@
 package io.contek.invoker.commons.websocket;
 
+import io.contek.invoker.commons.TinyBitSet;
+
 import javax.annotation.concurrent.NotThreadSafe;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static io.contek.invoker.commons.websocket.ConsumerState.TERMINATED;
 
 @NotThreadSafe
 final class WebSocketComponentManager {
 
-  private final List<IWebSocketComponent> active = new LinkedList<>();
-  private final List<IWebSocketComponent> idle = new LinkedList<>();
+  private final List<IWebSocketComponent> active = new ArrayList<>(16);
+  private final List<IWebSocketComponent> idle = new ArrayList<>(16);
+
+
+  private static final class ComponentFilterPredicate implements Predicate<IWebSocketComponent> {
+    private int idx = 0;
+    private long bitSet;
+
+    public void init(long bitSet) {
+      idx = 0;
+      this.bitSet = bitSet;
+    }
+
+    @Override
+    public boolean test(IWebSocketComponent iWebSocketComponent) {
+      return TinyBitSet.isSet(bitSet, idx++);
+    }
+  }
+
+  private final ComponentFilterPredicate removePredicate = new ComponentFilterPredicate();
 
   void attach(IWebSocketComponent component) {
     switch (component.getState()) {
@@ -19,30 +39,38 @@ final class WebSocketComponentManager {
       case IDLE -> idle.add(component);
       default -> throw new IllegalStateException(component.getState().name());
     }
+    if (active.size() + idle.size() > 63)
+      throw new IllegalStateException("Too many components added to a ComponentManager");
   }
 
   void refresh() {
-    Iterator<IWebSocketComponent> idleIt = idle.iterator();
-    while (idleIt.hasNext()) {
-      IWebSocketComponent next = idleIt.next();
+    long toRemoveIdle = 0;
+    for (int i = 0; i < idle.size(); i++) {
+      IWebSocketComponent next = idle.get(i);
       switch (next.getState()) {
         case ACTIVE:
           active.add(next);
         case TERMINATED:
-          idleIt.remove();
-          break;
+          toRemoveIdle = TinyBitSet.set(toRemoveIdle, i);
       }
     }
-    Iterator<IWebSocketComponent> activeIt = active.iterator();
-    while (activeIt.hasNext()) {
-      IWebSocketComponent next = activeIt.next();
+    synchronized (removePredicate) {
+      removePredicate.init(toRemoveIdle);
+      idle.removeIf(removePredicate);
+    }
+    long toRemoveActive = 0;
+    for (int i = 0; i < active.size(); i++) {
+      IWebSocketComponent next = active.get(i);
       switch (next.getState()) {
         case IDLE:
           idle.add(next);
         case TERMINATED:
-          activeIt.remove();
-          break;
+          toRemoveActive = TinyBitSet.set(toRemoveActive, i);
       }
+    }
+    synchronized (removePredicate) {
+      removePredicate.init(toRemoveActive);
+      active.removeIf(removePredicate);
     }
   }
 

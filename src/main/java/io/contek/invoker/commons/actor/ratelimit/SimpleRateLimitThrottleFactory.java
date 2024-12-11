@@ -2,7 +2,6 @@ package io.contek.invoker.commons.actor.ratelimit;
 
 import com.google.common.collect.ImmutableList;
 import io.contek.ursa.cache.LimiterManager;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.net.InetAddress;
@@ -26,7 +25,7 @@ public final class SimpleRateLimitThrottleFactory implements IRateLimitThrottleF
   }
 
   @Override
-  public IRateLimitThrottle create(InetAddress boundLocalAddress, @Nullable String apiKeyId) {
+  public IRateLimitThrottle create(InetAddress boundLocalAddress, String apiKeyId) {
     return new SimpleRateLimitThrottle(
         boundLocalAddress.getCanonicalHostName(), apiKeyId, manager, interceptors);
   }

@@ -15,7 +15,6 @@ import okhttp3.WebSocketListener;
 import okio.ByteString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.EOFException;
@@ -278,26 +277,26 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
     }
 
     @Override
-    public void onFailure(WebSocket ws, Throwable t, @Nullable Response response) {
-      if (t instanceof SocketTimeoutException) {
-        log.warn("Shutting down inactive session #{}: SocketTimeoutException {}", connectionId, t.getMessage());
-      } else if (t instanceof EOFException) {
-        log.warn("Server closed connection  #{} EOFException: {} ", connectionId, t.getMessage());
-      } else if (t instanceof IOException) {
-        log.warn("Connection #{} interrupted {} IOException", connectionId, t.getMessage());
-      } else if (t instanceof WebSocketServerRestartException) {
-        log.warn("Server requires restart {} for #{} WebSocketServerRestartException", connectionId, t.getMessage());
-      } else if (t instanceof WebSocketSessionExpiredException) {
-        log.warn("Session #{} expired WebSocketSessionExpiredException {}", connectionId, t.getMessage());
-      } else if (t instanceof WebSocketSessionInactiveException) {
-        log.warn("Session #{} is inactive WebSocketSessionInactiveException {}", connectionId, t.getMessage());
-      } else if (t instanceof WebSocketIllegalSequenceException) {
-        log.warn("Received out of order message for #{} WebSocketIllegalSequenceException: {}", connectionId, t.getMessage());
-      } else if (t instanceof WebSocketIllegalStateException) {
-        log.warn("Channel #{} has invalid state {} WebSocketIllegalStateException", connectionId, t.getMessage());
-      } else {
-        log.error("Encountered unknown error for ws #{}: {}", connectionId, response, t);
-      }
+    public void onFailure(WebSocket ws, Throwable t, Response response) {
+        switch (t) {
+            case SocketTimeoutException e ->
+                    log.warn("Shutting down inactive session #{}: SocketTimeoutException {}", connectionId, t.getMessage());
+            case EOFException e ->
+                    log.warn("Server closed connection  #{} EOFException: {} ", connectionId, t.getMessage());
+            case IOException e ->
+                    log.warn("Connection #{} interrupted {} IOException", connectionId, t.getMessage());
+            case WebSocketServerRestartException e ->
+                    log.warn("Server requires restart {} for #{} WebSocketServerRestartException", connectionId, t.getMessage());
+            case WebSocketSessionExpiredException e ->
+                    log.warn("Session #{} expired WebSocketSessionExpiredException {}", connectionId, t.getMessage());
+            case WebSocketSessionInactiveException e ->
+                    log.warn("Session #{} is inactive WebSocketSessionInactiveException {}", connectionId, t.getMessage());
+            case WebSocketIllegalSequenceException e ->
+                    log.warn("Received out of order message for #{} WebSocketIllegalSequenceException: {}", connectionId, t.getMessage());
+            case WebSocketIllegalStateException e ->
+                    log.warn("Channel #{} has invalid state {} WebSocketIllegalStateException", connectionId, t.getMessage());
+            default -> log.error("Encountered unknown error for ws #{}: {}", connectionId, response, t);
+        }
 
       try {
         log.info("Closing connection #{}.", connectionId);

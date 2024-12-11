@@ -5,7 +5,7 @@ import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -23,7 +23,7 @@ public abstract class BaseWebSocketChannel<
 
   private final AtomicReference<SubscriptionState> stateHolder =
       new AtomicReference<>(UNSUBSCRIBED);
-  private final List<ISubscribingConsumer<Data>> consumers = new LinkedList<>();
+  private final List<ISubscribingConsumer<Data>> consumers = new ArrayList<>();
 
   protected BaseWebSocketChannel(Id id) {
     this.id = id;
@@ -125,7 +125,13 @@ public abstract class BaseWebSocketChannel<
   private ConsumerState getChildConsumerState() {
     synchronized (consumers) {
       consumers.removeIf(consumer -> consumer.getState() == TERMINATED);
-      return consumers.stream().anyMatch(consumer -> consumer.getState() == ACTIVE) ? ACTIVE : IDLE;
+      for (int i = 0; i < consumers.size(); i++) {
+          ISubscribingConsumer<Data> consumer = consumers.get(i);
+          if (consumer.getState() == ACTIVE) {
+              return ACTIVE;
+          }
+      }
+      return IDLE;
     }
   }
 
