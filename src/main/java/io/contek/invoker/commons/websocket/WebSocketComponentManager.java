@@ -87,7 +87,11 @@ final class WebSocketComponentManager {
   }
 
   void onMessage(AnyWebSocketMessage message, WebSocketSession session) {
-    active.forEach(component -> component.onMessage(message, session));
+      // noinspection ALL
+      for (int i = 0; i < active.size(); i++) {
+          IWebSocketComponent component = active.get(i);
+          component.onMessage(message, session);
+      }
   }
 
   void afterDisconnect() {

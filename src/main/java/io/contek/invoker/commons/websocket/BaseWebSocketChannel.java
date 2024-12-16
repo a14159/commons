@@ -92,7 +92,11 @@ public abstract class BaseWebSocketChannel<
     if (casted != null) {
       Data data = getData(casted);
       synchronized (consumers) {
-        consumers.forEach(consumer -> consumer.onNext(data));
+        // noinspection ALL
+        for (int i = 0; i < consumers.size(); i++) {
+          ISubscribingConsumer<Data> consumer = consumers.get(i);
+          consumer.onNext(data);
+        }
       }
     }
 
@@ -125,6 +129,7 @@ public abstract class BaseWebSocketChannel<
   private ConsumerState getChildConsumerState() {
     synchronized (consumers) {
       consumers.removeIf(consumer -> consumer.getState() == TERMINATED);
+      // noinspection ALL
       for (int i = 0; i < consumers.size(); i++) {
           ISubscribingConsumer<Data> consumer = consumers.get(i);
           if (consumer.getState() == ACTIVE) {
