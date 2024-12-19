@@ -75,7 +75,11 @@ final class WebSocketComponentManager {
   }
 
   void heartbeat(WebSocketSession session) {
-    active.forEach(c -> c.heartbeat(session));
+      // noinspection ALL
+      for (int i = 0, activeSize = active.size(); i < activeSize; i++) {
+          IWebSocketComponent c = active.get(i);
+          c.heartbeat(session);
+      }
   }
 
   boolean hasActiveComponent() {
@@ -88,7 +92,7 @@ final class WebSocketComponentManager {
 
   void onMessage(AnyWebSocketMessage message, WebSocketSession session) {
       // noinspection ALL
-      for (int i = 0; i < active.size(); i++) {
+      for (int i = 0, activeSize = active.size(); i < activeSize; i++) {
           IWebSocketComponent component = active.get(i);
           component.onMessage(message, session);
       }

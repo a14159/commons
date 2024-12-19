@@ -1,13 +1,14 @@
 package io.contek.invoker.commons.websocket;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 import static io.contek.invoker.commons.websocket.ConsumerState.*;
 import static io.contek.invoker.commons.websocket.SubscriptionState.*;
@@ -126,9 +127,11 @@ public abstract class BaseWebSocketChannel<
 
   protected abstract void reset();
 
+  private final Predicate<ISubscribingConsumer<Data>> filterTerminated = consumer -> consumer.getState() == TERMINATED;
+
   private ConsumerState getChildConsumerState() {
     synchronized (consumers) {
-      consumers.removeIf(consumer -> consumer.getState() == TERMINATED);
+      consumers.removeIf(filterTerminated);
       // noinspection ALL
       for (int i = 0; i < consumers.size(); i++) {
           ISubscribingConsumer<Data> consumer = consumers.get(i);
@@ -152,7 +155,11 @@ public abstract class BaseWebSocketChannel<
   private void setState(SubscriptionState state) {
     synchronized (stateHolder) {
       synchronized (consumers) {
-        consumers.forEach(consumer -> consumer.onStateChange(state));
+          // noinspection ALL
+          for (int i = 0, consumersSize = consumers.size(); i < consumersSize; i++) {
+              ISubscribingConsumer<Data> consumer = consumers.get(i);
+              consumer.onStateChange(state);
+          }
       }
       stateHolder.set(state);
     }
