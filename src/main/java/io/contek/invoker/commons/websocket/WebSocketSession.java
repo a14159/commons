@@ -1,7 +1,7 @@
 package io.contek.invoker.commons.websocket;
 
 import com.alibaba.fastjson2.JSON;
-import io.contek.invoker.commons.MetricsRecorder;
+import io.contek.invoker.util.MetricsRecorder;
 import okhttp3.WebSocket;
 
 import javax.annotation.concurrent.ThreadSafe;

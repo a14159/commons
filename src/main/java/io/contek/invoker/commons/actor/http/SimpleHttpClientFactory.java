@@ -11,6 +11,8 @@ import static java.net.InetAddress.getLoopbackAddress;
 @Immutable
 public final class SimpleHttpClientFactory implements IHttpClientFactory {
 
+  public static boolean USE_LOGGING = false;
+
   private static final InetAddress LOCAL_HOST = getLoopbackAddress();
 
   private SimpleHttpClientFactory() {}
@@ -21,16 +23,28 @@ public final class SimpleHttpClientFactory implements IHttpClientFactory {
 
   @Override
   public IHttpClient create(IHttpContext context) {
-    OkHttpClient.Builder builder =
-        new OkHttpClient()
-            .newBuilder()
-            .addInterceptor(
-                HttpLoggingInterceptor.newBuilder()
+    OkHttpClient.Builder builder;
+
+    if (USE_LOGGING) {
+      builder = new OkHttpClient()
+              .newBuilder();
+//            .addInterceptor(
+//                HttpLoggingInterceptor.newBuilder()
+//                    .setLogHeader(context.getLogHeaders())
+//                    .setLogPayload(context.getLogPayload())
+//                    .setLogTimestamps(context.getLogTimestamps())
+//                    .build());
+    } else {
+      builder =
+              new OkHttpClient()
+                .newBuilder()
+                .addInterceptor(
+                  HttpLoggingInterceptor.newBuilder()
                     .setLogHeader(context.getLogHeaders())
                     .setLogPayload(context.getLogPayload())
                     .setLogTimestamps(context.getLogTimestamps())
                     .build());
-
+    }
     Duration connectionTimeout = context.getConnectionTimeout();
     if (connectionTimeout != null) {
       builder.connectTimeout(connectionTimeout);
