@@ -25,7 +25,7 @@ public final class SimpleHttpClientFactory implements IHttpClientFactory {
   public IHttpClient create(IHttpContext context) {
     OkHttpClient.Builder builder;
 
-    if (USE_LOGGING) {
+    if (!USE_LOGGING) {
       builder = new OkHttpClient()
               .newBuilder();
 //            .addInterceptor(
