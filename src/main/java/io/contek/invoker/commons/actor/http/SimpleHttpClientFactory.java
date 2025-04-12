@@ -25,7 +25,17 @@ public final class SimpleHttpClientFactory implements IHttpClientFactory {
   public IHttpClient create(IHttpContext context) {
     OkHttpClient.Builder builder;
 
-    if (!USE_LOGGING) {
+    if (USE_LOGGING) {
+      builder =
+              new OkHttpClient()
+                      .newBuilder()
+                      .addInterceptor(
+                              HttpLoggingInterceptor.newBuilder()
+                                      .setLogHeader(context.getLogHeaders())
+                                      .setLogPayload(context.getLogPayload())
+                                      .setLogTimestamps(context.getLogTimestamps())
+                                      .build());
+    } else {
       builder = new OkHttpClient()
               .newBuilder();
 //            .addInterceptor(
@@ -34,16 +44,6 @@ public final class SimpleHttpClientFactory implements IHttpClientFactory {
 //                    .setLogPayload(context.getLogPayload())
 //                    .setLogTimestamps(context.getLogTimestamps())
 //                    .build());
-    } else {
-      builder =
-              new OkHttpClient()
-                .newBuilder()
-                .addInterceptor(
-                  HttpLoggingInterceptor.newBuilder()
-                    .setLogHeader(context.getLogHeaders())
-                    .setLogPayload(context.getLogPayload())
-                    .setLogTimestamps(context.getLogTimestamps())
-                    .build());
     }
     Duration connectionTimeout = context.getConnectionTimeout();
     if (connectionTimeout != null) {
