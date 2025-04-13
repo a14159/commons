@@ -1,6 +1,5 @@
 package io.contek.invoker.commons.rest;
 
-import com.google.common.collect.ImmutableList;
 import io.contek.invoker.commons.actor.IActor;
 import io.contek.invoker.commons.actor.RequestContext;
 import io.contek.invoker.commons.actor.http.AnyHttpException;
@@ -11,6 +10,7 @@ import io.contek.invoker.security.ICredential;
 import io.contek.ursa.AcquireTimeoutException;
 
 import javax.annotation.concurrent.NotThreadSafe;
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
@@ -39,7 +39,7 @@ public abstract class BaseRestRequest<R> {
     }
   }
 
-  protected abstract ImmutableList<TypedPermitRequest> getRequiredQuotas();
+  protected abstract List<TypedPermitRequest> getRequiredQuotas();
 
   protected abstract RestCall createCall(ICredential credential);
 

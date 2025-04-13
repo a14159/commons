@@ -1,6 +1,5 @@
 package io.contek.invoker.commons.rest;
 
-import com.google.common.collect.ImmutableMap;
 import io.contek.invoker.commons.actor.http.HttpConnectionException;
 import io.contek.invoker.commons.actor.http.IHttpClient;
 import okhttp3.Headers;
@@ -19,13 +18,13 @@ public final class RestCall {
 
   private final RestMethod method;
   private final String url;
-  private final ImmutableMap<String, String> headers;
+  private final Map<String, String> headers;
   private final RestMediaBody body;
 
   private RestCall(
       RestMethod method,
       String url,
-      ImmutableMap<String, String> headers,
+      Map<String, String> headers,
       @Nullable RestMediaBody body) {
     this.method = method;
     this.url = url;
@@ -90,7 +89,7 @@ public final class RestCall {
 
     public RestCall build() {
       return new RestCall(
-          method, url, headers == null ? ImmutableMap.of() : ImmutableMap.copyOf(headers), body);
+          method, url, headers == null ? Map.of() : Map.copyOf(headers), body);
     }
 
     private Builder() {}

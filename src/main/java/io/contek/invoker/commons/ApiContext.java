@@ -1,6 +1,5 @@
 package io.contek.invoker.commons;
 
-import com.google.common.collect.ImmutableList;
 import io.contek.invoker.commons.actor.ratelimit.IRateLimitQuotaInterceptor;
 import io.contek.invoker.commons.rest.RestContext;
 import io.contek.invoker.commons.websocket.WebSocketContext;
@@ -9,6 +8,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Immutable
@@ -16,12 +16,12 @@ public final class ApiContext {
 
   private final RestContext restContext;
   private final WebSocketContext webSocketContext;
-  private final ImmutableList<IRateLimitQuotaInterceptor> interceptors;
+  private final List<IRateLimitQuotaInterceptor> interceptors;
 
   private ApiContext(
       @Nullable RestContext restContext,
       @Nullable WebSocketContext webSocketContext,
-      ImmutableList<IRateLimitQuotaInterceptor> interceptors) {
+      List<IRateLimitQuotaInterceptor> interceptors) {
     this.restContext = restContext;
     this.webSocketContext = webSocketContext;
     this.interceptors = interceptors;
@@ -45,7 +45,7 @@ public final class ApiContext {
     return webSocketContext;
   }
 
-  public ImmutableList<IRateLimitQuotaInterceptor> getInterceptors() {
+  public List<IRateLimitQuotaInterceptor> getInterceptors() {
     return interceptors;
   }
 
@@ -85,7 +85,7 @@ public final class ApiContext {
     }
 
     public ApiContext build() {
-      return new ApiContext(restContext, webSocketContext, ImmutableList.copyOf(interceptors));
+      return new ApiContext(restContext, webSocketContext, Collections.unmodifiableList(interceptors));
     }
 
     private Builder() {}

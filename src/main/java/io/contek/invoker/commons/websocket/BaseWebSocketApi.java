@@ -1,13 +1,12 @@
 package io.contek.invoker.commons.websocket;
 
-import com.google.common.collect.ImmutableList;
-import io.contek.invoker.util.MetricsRecorder;
 import io.contek.invoker.commons.actor.IActor;
 import io.contek.invoker.commons.actor.RequestContext;
 import io.contek.invoker.commons.actor.http.HttpBusyException;
 import io.contek.invoker.commons.actor.http.HttpInterruptedException;
 import io.contek.invoker.commons.actor.ratelimit.TypedPermitRequest;
 import io.contek.invoker.security.ICredential;
+import io.contek.invoker.util.MetricsRecorder;
 import io.contek.ursa.AcquireTimeoutException;
 import okhttp3.Response;
 import okhttp3.WebSocket;
@@ -20,6 +19,7 @@ import javax.annotation.concurrent.ThreadSafe;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -97,7 +97,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
     return liveKeeper;
   }
 
-  protected abstract ImmutableList<TypedPermitRequest> getRequiredQuotas();
+  protected abstract List<TypedPermitRequest> getRequiredQuotas();
 
   protected abstract WebSocketCall createCall(ICredential credential);
 
