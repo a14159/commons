@@ -10,8 +10,6 @@ import javax.annotation.concurrent.ThreadSafe;
 import java.time.Duration;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @ThreadSafe
 public final class SimpleRateLimitThrottle implements IRateLimitThrottle {
 
@@ -46,7 +44,9 @@ public final class SimpleRateLimitThrottle implements IRateLimitThrottle {
   }
 
   private PermitRequest toPermitRequest(TypedPermitRequest quota) {
-    checkArgument(quota.getPermits() > 0);
+    if (quota.getPermits() <= 0) {
+      throw new IllegalArgumentException("No permits");
+    }
 
     return switch (quota.getType()) {
       case IP -> PermitRequest.newBuilder()

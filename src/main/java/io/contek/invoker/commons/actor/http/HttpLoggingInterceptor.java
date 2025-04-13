@@ -1,6 +1,5 @@
 package io.contek.invoker.commons.actor.http;
 
-import com.google.common.base.Joiner;
 import okhttp3.*;
 import okio.Buffer;
 import okio.BufferedSource;
@@ -11,6 +10,8 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -19,7 +20,7 @@ public final class HttpLoggingInterceptor implements Interceptor {
 
   private static final Logger log = LogManager.getLogger(HttpLoggingInterceptor.class);
 
-  private static final Joiner HEADER_JOINER = Joiner.on(',');
+  private static final Joiner HEADER_JOINER = new Joiner(",");
 
   private final boolean logHeader;
   private final boolean logPayload;
@@ -150,6 +151,40 @@ public final class HttpLoggingInterceptor implements Interceptor {
 
     public HttpLoggingInterceptor build() {
       return new HttpLoggingInterceptor(logHeader, logPayload, logTimestamps);
+    }
+  }
+
+  private record Joiner(String separator) {
+
+    public String join(Iterable<?> parts) {
+      if (parts instanceof List<?> li) {
+        int size = li.size();
+        if (size == 0) {
+          return "";
+        } else {
+          CharSequence[] toJoin = new CharSequence[size];
+
+          // noinspection all
+          for (int j = 0, liSize = li.size(); j < liSize; j++) {
+              Object part = li.get(j);
+              toJoin[j] = (part instanceof CharSequence ? (CharSequence) part : part.toString());
+          }
+
+          return String.join(separator, toJoin);
+        }
+      } else {
+        Iterator<?> it = parts.iterator();
+        StringBuilder sb = new StringBuilder();
+        if (it.hasNext()) {
+          sb.append(it.next().toString());
+
+          while (it.hasNext()) {
+            sb.append(separator);
+            sb.append(it.next().toString());
+          }
+        }
+        return sb.toString();
+      }
     }
   }
 }
