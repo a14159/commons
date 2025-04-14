@@ -38,12 +38,6 @@ public final class SimpleHttpClientFactory implements IHttpClientFactory {
     } else {
       builder = new OkHttpClient()
               .newBuilder();
-//            .addInterceptor(
-//                HttpLoggingInterceptor.newBuilder()
-//                    .setLogHeader(context.getLogHeaders())
-//                    .setLogPayload(context.getLogPayload())
-//                    .setLogTimestamps(context.getLogTimestamps())
-//                    .build());
     }
     Duration connectionTimeout = context.getConnectionTimeout();
     if (connectionTimeout != null) {

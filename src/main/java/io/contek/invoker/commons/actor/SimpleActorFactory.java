@@ -23,7 +23,7 @@ public final class SimpleActorFactory implements IActorFactory {
   private SimpleActorFactory(
       ICredentialFactory credentialFactory,
       IHttpClientFactory httpClientFactory,
-      IRateLimitThrottleFactory rateLimitThrottleFactory) {
+      @Nullable IRateLimitThrottleFactory rateLimitThrottleFactory) {
     this.credentialFactory = credentialFactory;
     this.httpClientFactory = httpClientFactory;
     this.rateLimitThrottleFactory = rateLimitThrottleFactory;
@@ -37,10 +37,12 @@ public final class SimpleActorFactory implements IActorFactory {
     ICredential credential =
         apiKey == null ? ICredential.anonymous() : credentialFactory.create(apiKey);
     IHttpClient httpClient = httpClientFactory.create(context);
-    IRateLimitThrottle rateLimitThrottle =
-        rateLimitThrottleFactory.create(
-            httpClient.getBoundLocalAddress(), apiKey == null ? null : apiKey.getId());
-    return new SimpleActor(credential, httpClient, rateLimitThrottle);
+      if (rateLimitThrottleFactory != null) {
+          IRateLimitThrottle rateLimitThrottle =
+              rateLimitThrottleFactory.create(
+                  httpClient.getBoundLocalAddress(), apiKey == null ? null : apiKey.getId());
+          return new SimpleActor(credential, httpClient, rateLimitThrottle);
+      } else return new SimpleActorNoThrottle(credential, httpClient);
   }
 
   @NotThreadSafe
@@ -72,9 +74,7 @@ public final class SimpleActorFactory implements IActorFactory {
       if (httpClientFactory == null) {
         throw new IllegalArgumentException("No http client factory specified");
       }
-      if (rateLimitThrottleFactory == null) {
-        throw new IllegalArgumentException("No rate limit throttle factory specified");
-      }
+
       return new SimpleActorFactory(credentialFactory, httpClientFactory, rateLimitThrottleFactory);
     }
 
