@@ -94,7 +94,7 @@ public abstract class BaseWebSocketChannel<
       Data data = getData(casted);
       synchronized (consumers) {
         // noinspection ALL
-        for (int i = 0; i < consumers.size(); i++) {
+        for (int i = 0, cSize = consumers.size(); i < cSize; i++) {
           ISubscribingConsumer<Data> consumer = consumers.get(i);
           consumer.onNext(data);
         }
@@ -133,7 +133,7 @@ public abstract class BaseWebSocketChannel<
     synchronized (consumers) {
       consumers.removeIf(filterTerminated);
       // noinspection ALL
-      for (int i = 0; i < consumers.size(); i++) {
+      for (int i = 0, cSize = consumers.size(); i < cSize; i++) {
           ISubscribingConsumer<Data> consumer = consumers.get(i);
           if (consumer.getState() == ACTIVE) {
               return ACTIVE;

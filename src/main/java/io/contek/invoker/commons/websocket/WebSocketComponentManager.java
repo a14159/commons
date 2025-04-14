@@ -45,7 +45,7 @@ final class WebSocketComponentManager {
 
   void refresh() {
     long toRemoveIdle = 0;
-    for (int i = 0; i < idle.size(); i++) {
+    for (int i = 0, idleSize = idle.size(); i < idleSize; i++) {
       IWebSocketComponent next = idle.get(i);
       switch (next.getState()) {
         case ACTIVE:
@@ -59,7 +59,7 @@ final class WebSocketComponentManager {
       idle.removeIf(removePredicate);
     }
     long toRemoveActive = 0;
-    for (int i = 0; i < active.size(); i++) {
+    for (int i = 0, activeSize = active.size(); i < activeSize; i++) {
       IWebSocketComponent next = active.get(i);
       switch (next.getState()) {
         case IDLE:

@@ -320,7 +320,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
 
     @Override
     public void onOpen(WebSocket ws, Response response) {
-      log.info("WS {} connection #{} is open: {}.", actor.getCredential().isAnonymous() ? "public" : "private",connectionId, response);
+      log.info("WS {} connection #{} is open: {}.", actor.getCredential().isAnonymous() ? "public" : "private", connectionId, response);
     }
   }
 }
