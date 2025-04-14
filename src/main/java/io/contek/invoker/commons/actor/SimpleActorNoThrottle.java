@@ -1,13 +1,9 @@
 package io.contek.invoker.commons.actor;
 
 import io.contek.invoker.commons.actor.http.IHttpClient;
-import io.contek.invoker.commons.actor.ratelimit.IRateLimitThrottle;
 import io.contek.invoker.commons.actor.ratelimit.TypedPermitRequest;
 import io.contek.invoker.security.ICredential;
-import io.contek.ursa.AcquireTimeoutException;
-import io.contek.ursa.IPermitSession;
 
-import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Clock;
 import java.util.List;
@@ -18,8 +14,7 @@ public final class SimpleActorNoThrottle implements IActor {
   private final ICredential credential;
   private final IHttpClient httpClient;
 
-  public SimpleActorNoThrottle(
-      ICredential credential, IHttpClient httpClient) {
+  public SimpleActorNoThrottle(ICredential credential, IHttpClient httpClient) {
     this.credential = credential;
     this.httpClient = httpClient;
   }
@@ -30,8 +25,7 @@ public final class SimpleActorNoThrottle implements IActor {
   }
 
   @Override
-  public RequestContext getRequestContext(String requestName, List<TypedPermitRequest> ignored)
-      throws AcquireTimeoutException {
+  public RequestContext getRequestContext(String requestName, List<TypedPermitRequest> ignored) {
     return new RequestContext(httpClient, null);
   }
 
