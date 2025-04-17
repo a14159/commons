@@ -1,16 +1,15 @@
 package io.contek.invoker.commons.rest;
 
-import com.google.common.escape.Escaper;
-import com.google.common.escape.Escapers;
+import removing.dependencies.Escaper;
+import removing.dependencies.Escapers;
 
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.TreeMap;
-
-import static java.util.stream.Collectors.joining;
 
 @Immutable
 public final class RestParams {
@@ -52,9 +51,12 @@ public final class RestParams {
   }
 
   private static String toQueryString(Map<String, Object> params, Escaper escaper) {
-    return params.entrySet().stream()
-        .map(entry -> entry.getKey() + "=" + escaper.escape(entry.getValue().toString()))
-        .collect(joining("&"));
+      StringJoiner joiner = new StringJoiner("&");
+      for (Map.Entry<String, Object> entry : params.entrySet()) {
+          String s = entry.getKey() + "=" + escaper.escape(entry.getValue().toString());
+          joiner.add(s);
+      }
+      return joiner.toString();
   }
 
   @NotThreadSafe
