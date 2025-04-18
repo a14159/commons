@@ -1,12 +1,10 @@
 package io.contek.invoker.commons.actor;
 
 import io.contek.invoker.commons.actor.http.IHttpClient;
-import io.contek.invoker.commons.actor.ratelimit.TypedPermitRequest;
 import io.contek.invoker.security.ICredential;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Clock;
-import java.util.List;
 
 @ThreadSafe
 public final class SimpleActorNoThrottle implements IActor {
@@ -25,8 +23,8 @@ public final class SimpleActorNoThrottle implements IActor {
   }
 
   @Override
-  public RequestContext getRequestContext(String requestName, List<TypedPermitRequest> ignored) {
-    return new RequestContext(httpClient, null);
+  public RequestContext getRequestContext(String requestName) {
+    return new RequestContext(httpClient);
   }
 
   @Override

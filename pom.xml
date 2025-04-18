@@ -22,17 +22,6 @@
             <artifactId>invoker-security</artifactId>
             <version>3.6.19-head</version>
         </dependency>
-
-        <dependency>
-            <groupId>io.contek.ursa</groupId>
-            <artifactId>ursa-cache</artifactId>
-            <version>1.3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.contek.ursa</groupId>
-            <artifactId>ursa-core-api</artifactId>
-            <version>1.3.1</version>
-        </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>

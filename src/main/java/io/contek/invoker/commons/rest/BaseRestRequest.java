@@ -3,14 +3,10 @@ package io.contek.invoker.commons.rest;
 import io.contek.invoker.commons.actor.IActor;
 import io.contek.invoker.commons.actor.RequestContext;
 import io.contek.invoker.commons.actor.http.AnyHttpException;
-import io.contek.invoker.commons.actor.http.HttpBusyException;
 import io.contek.invoker.commons.actor.http.HttpInterruptedException;
-import io.contek.invoker.commons.actor.ratelimit.TypedPermitRequest;
 import io.contek.invoker.security.ICredential;
-import io.contek.ursa.AcquireTimeoutException;
 
 import javax.annotation.concurrent.NotThreadSafe;
-import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
@@ -27,19 +23,15 @@ public abstract class BaseRestRequest<R> {
     RestCall call = createCall(actor.getCredential());
 
     try (RequestContext context =
-        actor.getRequestContext(getClass().getSimpleName(), getRequiredQuotas())) {
+        actor.getRequestContext(getClass().getSimpleName())) {
       RestResponse response = call.submit(context.getClient());
       R result = requireNonNull(response.getAs(getResponseType()));
       checkResult(result, response);
       return result;
-    } catch (AcquireTimeoutException e) {
-      throw new HttpBusyException(e);
     } catch (InterruptedException e) {
       throw new HttpInterruptedException(e);
     }
   }
-
-  protected abstract List<TypedPermitRequest> getRequiredQuotas();
 
   protected abstract RestCall createCall(ICredential credential);
 

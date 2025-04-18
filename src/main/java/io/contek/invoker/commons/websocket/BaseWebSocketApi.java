@@ -2,12 +2,9 @@ package io.contek.invoker.commons.websocket;
 
 import io.contek.invoker.commons.actor.IActor;
 import io.contek.invoker.commons.actor.RequestContext;
-import io.contek.invoker.commons.actor.http.HttpBusyException;
 import io.contek.invoker.commons.actor.http.HttpInterruptedException;
-import io.contek.invoker.commons.actor.ratelimit.TypedPermitRequest;
 import io.contek.invoker.security.ICredential;
 import is.fm.util.MetricsRecorder;
-import io.contek.ursa.AcquireTimeoutException;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
@@ -19,7 +16,6 @@ import javax.annotation.concurrent.ThreadSafe;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
-import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -97,8 +93,6 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
     return liveKeeper;
   }
 
-  protected abstract List<TypedPermitRequest> getRequiredQuotas();
-
   protected abstract WebSocketCall createCall(ICredential credential);
 
   protected abstract void checkErrorMessage(AnyWebSocketMessage message)
@@ -155,12 +149,10 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
             }
             WebSocketCall call = createCall(actor.getCredential());
             try (RequestContext context =
-                actor.getRequestContext(getClass().getSimpleName(), getRequiredQuotas())) {
+                actor.getRequestContext(getClass().getSimpleName())) {
               WebSocketSession session = call.submit(context.getClient(), handler);
               activate();
               return session;
-            } catch (AcquireTimeoutException e) {
-              throw new HttpBusyException(e);
             } catch (InterruptedException e) {
               throw new HttpInterruptedException(e);
             }

@@ -3,8 +3,6 @@ package io.contek.invoker.commons.actor;
 import io.contek.invoker.commons.actor.http.IHttpClient;
 import io.contek.invoker.commons.actor.http.IHttpClientFactory;
 import io.contek.invoker.commons.actor.http.IHttpContext;
-import io.contek.invoker.commons.actor.ratelimit.IRateLimitThrottle;
-import io.contek.invoker.commons.actor.ratelimit.IRateLimitThrottleFactory;
 import io.contek.invoker.security.ApiKey;
 import io.contek.invoker.security.ICredential;
 import io.contek.invoker.security.ICredentialFactory;
@@ -18,15 +16,12 @@ public final class SimpleActorFactory implements IActorFactory {
 
   private final ICredentialFactory credentialFactory;
   private final IHttpClientFactory httpClientFactory;
-  private final IRateLimitThrottleFactory rateLimitThrottleFactory;
 
   private SimpleActorFactory(
       ICredentialFactory credentialFactory,
-      IHttpClientFactory httpClientFactory,
-      @Nullable IRateLimitThrottleFactory rateLimitThrottleFactory) {
+      IHttpClientFactory httpClientFactory) {
     this.credentialFactory = credentialFactory;
     this.httpClientFactory = httpClientFactory;
-    this.rateLimitThrottleFactory = rateLimitThrottleFactory;
   }
 
   public static Builder newBuilder() {
@@ -37,12 +32,7 @@ public final class SimpleActorFactory implements IActorFactory {
     ICredential credential =
         apiKey == null ? ICredential.anonymous() : credentialFactory.create(apiKey);
     IHttpClient httpClient = httpClientFactory.create(context);
-      if (rateLimitThrottleFactory != null) {
-          IRateLimitThrottle rateLimitThrottle =
-              rateLimitThrottleFactory.create(
-                  httpClient.getBoundLocalAddress(), apiKey == null ? null : apiKey.getId());
-          return new SimpleActor(credential, httpClient, rateLimitThrottle);
-      } else return new SimpleActorNoThrottle(credential, httpClient);
+    return new SimpleActorNoThrottle(credential, httpClient);
   }
 
   @NotThreadSafe
@@ -50,7 +40,6 @@ public final class SimpleActorFactory implements IActorFactory {
 
     private ICredentialFactory credentialFactory;
     private IHttpClientFactory httpClientFactory;
-    private IRateLimitThrottleFactory rateLimitThrottleFactory;
 
     public Builder setCredentialFactory(ICredentialFactory credentialFactory) {
       this.credentialFactory = credentialFactory;
@@ -62,11 +51,6 @@ public final class SimpleActorFactory implements IActorFactory {
       return this;
     }
 
-    public Builder setRateLimitThrottleFactory(IRateLimitThrottleFactory rateLimitThrottleFactory) {
-      this.rateLimitThrottleFactory = rateLimitThrottleFactory;
-      return this;
-    }
-
     public SimpleActorFactory build() {
       if (credentialFactory == null) {
         throw new IllegalArgumentException("No credential factory specified");
@@ -75,7 +59,7 @@ public final class SimpleActorFactory implements IActorFactory {
         throw new IllegalArgumentException("No http client factory specified");
       }
 
-      return new SimpleActorFactory(credentialFactory, httpClientFactory, rateLimitThrottleFactory);
+      return new SimpleActorFactory(credentialFactory, httpClientFactory);
     }
 
     private Builder() {}
