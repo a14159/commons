@@ -1,6 +1,6 @@
 package io.contek.invoker.commons.websocket;
 
-import io.contek.invoker.util.TinyBitSet;
+import is.fm.util.TinyBitSet;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.ArrayList;

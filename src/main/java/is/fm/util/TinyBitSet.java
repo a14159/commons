@@ -1,4 +1,4 @@
-package io.contek.invoker.util;
+package is.fm.util;
 
 public final class TinyBitSet {
 

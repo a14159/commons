@@ -1,7 +1,7 @@
 package io.contek.invoker.commons.rest;
 
-import removing.dependencies.Escaper;
-import removing.dependencies.Escapers;
+import is.fm.util.Escaper;
+import is.fm.util.Escapers;
 
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.NotThreadSafe;
