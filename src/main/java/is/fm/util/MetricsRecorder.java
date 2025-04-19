@@ -12,7 +12,7 @@ public final class MetricsRecorder {
 
     private static final Logger l = LogManager.getLogger(MetricsRecorder.class);
 
-    public static final int HISTORY = 100;
+    private static final int HISTORY = 100;
     private static final Map<String, MetricsRecorder> metrics = new ConcurrentHashMap<>();
 
     private final String name;
@@ -20,13 +20,11 @@ public final class MetricsRecorder {
     private final boolean[] callSuccess = new boolean[HISTORY];
     private long sumTimes = 0;
     private int successCnt = 0;
-    private int n = 0;
-    private int idx = 0;
     private int cnt = 0;
 
-    private String TU = "ms"; // time unit
+    private String TU = "ms"; // default time unit
 
-    private volatile int printInterval = 0;
+    private volatile int printInterval = 0; // suppressed by default
     private volatile boolean printFullStats = false;
 
     private MetricsRecorder(String name) {
@@ -49,26 +47,25 @@ public final class MetricsRecorder {
         TU = "µs";
     }
 
-    public void recordInvocation(long time, boolean success) { // yolo, not synchronized
+    // not synchronized
+    public synchronized void recordInvocation(final long time, final boolean success) {
         if (printInterval > 0) {
+
+            final int idx = cnt % HISTORY;
+
             int oldVal = callTimes[idx];
-            callTimes[idx] = (int) time;
-            sumTimes += (int) time;
+            // noinspection all
+            int timeInt = (int) time < 0 ? 0 : (int) time;
+            callTimes[idx] = timeInt;
             sumTimes -= oldVal;
+            sumTimes += timeInt;
 
             boolean wasSuccess = callSuccess[idx];
             callSuccess[idx] = success;
-            successCnt += success ? 1 : 0;
-            successCnt -= wasSuccess ? 1 : 0;
+            if (wasSuccess) --successCnt;
+            if (success) ++successCnt;
 
-            idx++;
-            idx %= HISTORY;
-
-            if (n < HISTORY) {
-                n++;
-            }
-
-            cnt++;
+            ++cnt;
             if (cnt % printInterval == 0) {
                 l.info(this.toString());
                 if (printFullStats)
@@ -78,21 +75,35 @@ public final class MetricsRecorder {
     }
 
     public long avgTime() {
-        return sumTimes / n;
+        return sumTimes / HISTORY;
     }
 
     public int errorRate() {
-        if (n < 10)
-            return 0;
-        return 100 - successCnt * 100 / n;
+        return 100 - successRate();
+    }
+
+    public int successRate() {
+        if (cnt < 10)
+            return 100;
+        return successCnt * 100 / HISTORY;
+    }
+
+    public String getMonitorName() {
+        return name;
     }
 
     public String toString() {
-        return "%s avgTime = %d %s successRate = %d%%".formatted(name, avgTime(), TU, 100 - errorRate());
+        int maxTime = 0;
+        // noinspection all
+        for (int i = 0, length = callTimes.length; i < length; i++) {
+            if (callTimes[i] > maxTime)
+                maxTime = callTimes[i];
+        }
+        return "%s avgTime = %d %s maxTime = %d %s successRate = %d%%".formatted(name, avgTime(), TU, maxTime, TU, successRate());
     }
 
     public String printFullInfo() {
-        int[] copy = Arrays.copyOf(callTimes, callTimes.length);
+        int[] copy = callTimes.clone();
         Arrays.sort(copy);
         return "min = %,d%s, tp10 = %,d%s, tp50 = %,d%s, tp90 = %,d%s, max = %,d%s".formatted(
                 copy[0], TU,
