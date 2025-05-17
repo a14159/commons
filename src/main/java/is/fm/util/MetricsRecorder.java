@@ -99,17 +99,33 @@ public final class MetricsRecorder {
             if (callTimes[i] > maxTime)
                 maxTime = callTimes[i];
         }
-        return "%s avgTime = %d %s maxTime = %d %s successRate = %d%%".formatted(name, avgTime(), TU, maxTime, TU, successRate());
+        return new StringBuilder(76)
+                .append(name)
+                .append(" avgTime = ")
+                .append(avgTime())
+                .append(" ")
+                .append(TU)
+                .append(" maxTime = ")
+                .append(maxTime).append(" ")
+                .append(TU)
+                .append(" successRate = ")
+                .append(successRate())
+                .append("%").toString();
     }
 
     public String printFullInfo() {
         int[] copy = callTimes.clone();
         Arrays.sort(copy);
-        return "min = %,d%s, tp10 = %,d%s, tp50 = %,d%s, tp90 = %,d%s, max = %,d%s".formatted(
-                copy[0], TU,
-                copy[(int) (copy.length * 0.1)], TU,
-                copy[copy.length / 2], TU,
-                copy[(int) (copy.length * 0.9)], TU,
-                copy[copy.length - 1], TU);
+        return new StringBuilder(64)
+                .append("min = ")
+                .append(copy[0]).append(TU)
+                .append(", tp10 = ")
+                .append(copy[(int) (copy.length * 0.1)]).append(TU)
+                .append(", tp50 = ")
+                .append(copy[copy.length / 2]).append(TU)
+                .append(", tp90 = ")
+                .append(copy[(int) (copy.length * 0.9)]).append(TU)
+                .append(", max = ")
+                .append(copy[copy.length - 1]).append(TU).toString();
     }
 }

@@ -3,8 +3,6 @@ package io.contek.invoker.commons.actor.http;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
-import static java.lang.String.format;
-
 @NotThreadSafe
 public final class ParsedHttpException extends AnyHttpException {
 
@@ -23,7 +21,7 @@ public final class ParsedHttpException extends AnyHttpException {
     T result = tryGetParsedEntityAs(type);
     if (result == null) {
       throw new ClassCastException(
-          format("Expected error type: %s, actual type: %s", type, parsedEntity.getClass()));
+          "Expected error type: " + type + ", actual type: " + parsedEntity.getClass());
     }
     return result;
   }
