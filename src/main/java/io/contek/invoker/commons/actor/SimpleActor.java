@@ -12,8 +12,7 @@ public final class SimpleActor implements IActor {
   private final ICredential credential;
   private final IHttpClient httpClient;
 
-  public SimpleActor(
-      ICredential credential, IHttpClient httpClient) {
+  public SimpleActor(ICredential credential, IHttpClient httpClient) {
     this.credential = credential;
     this.httpClient = httpClient;
   }
@@ -24,8 +23,7 @@ public final class SimpleActor implements IActor {
   }
 
   @Override
-  public RequestContext getRequestContext(String requestName)
-      throws InterruptedException {
+  public RequestContext getRequestContext(String requestName) {
     return new RequestContext(httpClient);
   }
 

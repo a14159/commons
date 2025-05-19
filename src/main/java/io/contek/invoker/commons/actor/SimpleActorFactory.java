@@ -32,7 +32,7 @@ public final class SimpleActorFactory implements IActorFactory {
     ICredential credential =
         apiKey == null ? ICredential.anonymous() : credentialFactory.create(apiKey);
     IHttpClient httpClient = httpClientFactory.create(context);
-    return new SimpleActorNoThrottle(credential, httpClient);
+    return new SimpleActor(credential, httpClient);
   }
 
   @NotThreadSafe
