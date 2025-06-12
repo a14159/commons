@@ -55,8 +55,7 @@ public final class RestCall {
   }
 
   private Request createRequest() {
-    return method.createRequest(
-        url, Headers.of(headers), body == null ? null : body.createRequestBody());
+    return method.createRequest(url, Headers.of(headers), body == null ? null : body.createRequestBody());
   }
 
   @NotThreadSafe
@@ -88,8 +87,8 @@ public final class RestCall {
     }
 
     public RestCall build() {
-      return new RestCall(
-          method, url, headers == null ? Map.of() : Map.copyOf(headers), body);
+//      return new RestCall(method, url, headers == null ? Map.of() : Map.copyOf(headers), body);
+      return new RestCall(method, url, headers == null ? Map.of() : headers, body);
     }
 
     private Builder() {}
