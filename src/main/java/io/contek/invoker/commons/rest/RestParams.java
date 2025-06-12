@@ -98,7 +98,8 @@ public final class RestParams {
       if (sort) {
         return new RestParams(new TreeMap<>(values));
       }
-      return new RestParams(Map.copyOf(values));
+//      return new RestParams(Map.copyOf(values)); // initial code: defensive copy
+      return new RestParams(values);
     }
   }
 }
