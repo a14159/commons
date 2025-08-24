@@ -10,11 +10,11 @@ import java.time.Clock;
 public final class SimpleActor implements IActor {
 
   private final ICredential credential;
-  private final IHttpClient httpClient;
+  private final RequestContext requestContext;
 
   public SimpleActor(ICredential credential, IHttpClient httpClient) {
     this.credential = credential;
-    this.httpClient = httpClient;
+    this.requestContext = new RequestContext(httpClient);
   }
 
   @Override
@@ -24,7 +24,7 @@ public final class SimpleActor implements IActor {
 
   @Override
   public RequestContext getRequestContext(String requestName) {
-    return new RequestContext(httpClient);
+    return requestContext;
   }
 
   @Override

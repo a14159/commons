@@ -76,10 +76,8 @@ public abstract class BaseWebSocketChannel<
 
   @Override
   public final ConsumerState getState() {
-    synchronized (consumers) {
-      if (getChildConsumerState() == ACTIVE) {
-        return ACTIVE;
-      }
+    if (getChildConsumerState() == ACTIVE) {
+      return ACTIVE;
     }
 
     synchronized (stateHolder) {

@@ -45,6 +45,7 @@ final class WebSocketComponentManager {
 
   void refresh() {
     long toRemoveIdle = 0;
+    boolean somethingChanged = false;
     for (int i = 0, idleSize = idle.size(); i < idleSize; i++) {
       IWebSocketComponent next = idle.get(i);
       switch (next.getState()) {
@@ -52,13 +53,17 @@ final class WebSocketComponentManager {
           active.add(next);
         case TERMINATED:
           toRemoveIdle = TinyBitSet.set(toRemoveIdle, i);
+          somethingChanged = true;
       }
     }
-    synchronized (removePredicate) {
-      removePredicate.init(toRemoveIdle);
-      idle.removeIf(removePredicate);
+    if (somethingChanged) {
+      synchronized (removePredicate) {
+        removePredicate.init(toRemoveIdle);
+        idle.removeIf(removePredicate);
+      }
     }
     long toRemoveActive = 0;
+    somethingChanged = false;
     for (int i = 0, activeSize = active.size(); i < activeSize; i++) {
       IWebSocketComponent next = active.get(i);
       switch (next.getState()) {
@@ -66,11 +71,14 @@ final class WebSocketComponentManager {
           idle.add(next);
         case TERMINATED:
           toRemoveActive = TinyBitSet.set(toRemoveActive, i);
+          somethingChanged = true;
       }
     }
-    synchronized (removePredicate) {
-      removePredicate.init(toRemoveActive);
-      active.removeIf(removePredicate);
+    if (somethingChanged) {
+      synchronized (removePredicate) {
+        removePredicate.init(toRemoveActive);
+        active.removeIf(removePredicate);
+      }
     }
   }
 

@@ -87,7 +87,6 @@ public final class RestCall {
     }
 
     public RestCall build() {
-//      return new RestCall(method, url, headers == null ? Map.of() : Map.copyOf(headers), body);
       return new RestCall(method, url, headers == null ? Map.of() : headers, body);
     }
 
