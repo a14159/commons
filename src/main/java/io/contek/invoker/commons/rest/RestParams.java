@@ -50,18 +50,19 @@ public final class RestParams {
   }
 
   private static String toQueryString(Map<String, Object> params, Escaper escaper) {
-      if (params.isEmpty())
-          return "";
-      StringBuilder sb = new StringBuilder(128);
-      for (Map.Entry<String, Object> entry : params.entrySet()) {
-          sb.append(entry.getKey());
-          sb.append("=");
-          sb.append(escaper.escape(entry.getValue().toString()));
-          sb.append("&");
-      }
-      sb.setLength(sb.length() - 1);
+    if (params.isEmpty()) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder(128);
+    for (Map.Entry<String, Object> entry : params.entrySet()) {
+      sb.append(entry.getKey());
+      sb.append('=');
+      sb.append(escaper.escape(entry.getValue().toString()));
+      sb.append('&');
+    }
+    sb.setLength(sb.length() - 1);
 
-      return sb.toString();
+    return sb.toString();
   }
 
   @NotThreadSafe
