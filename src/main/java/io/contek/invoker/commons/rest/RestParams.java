@@ -8,7 +8,6 @@ import javax.annotation.concurrent.NotThreadSafe;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.StringJoiner;
 import java.util.TreeMap;
 
 @Immutable
