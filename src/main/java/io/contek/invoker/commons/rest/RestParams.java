@@ -51,12 +51,18 @@ public final class RestParams {
   }
 
   private static String toQueryString(Map<String, Object> params, Escaper escaper) {
-      StringJoiner joiner = new StringJoiner("&");
+      if (params.isEmpty())
+          return "";
+      StringBuilder sb = new StringBuilder(128);
       for (Map.Entry<String, Object> entry : params.entrySet()) {
-          String s = entry.getKey() + "=" + escaper.escape(entry.getValue().toString());
-          joiner.add(s);
+          sb.append(entry.getKey());
+          sb.append("=");
+          sb.append(escaper.escape(entry.getValue().toString()));
+          sb.append("&");
       }
-      return joiner.toString();
+      sb.setLength(sb.length() - 1);
+
+      return sb.toString();
   }
 
   @NotThreadSafe
