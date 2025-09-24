@@ -38,19 +38,19 @@ public final class RestCall {
 
   RestResponse submit(IHttpClient client) throws RestErrorException, HttpConnectionException {
     Request request = createRequest();
-    Response response = client.submit(request);
-
-    try {
-      ResponseBody body = response.body();
-      String bodyString = body == null ? null : body.string();
-      RestResponse result = new RestResponse(response.code(), bodyString);
-      if (response.isSuccessful()) {
-        return result;
-      } else {
-        throw new RestErrorException(result);
+    try (Response response = client.submit(request)) {
+      try {
+        ResponseBody body = response.body();
+        String bodyString = body == null ? null : body.string();
+        RestResponse result = new RestResponse(response.code(), bodyString);
+        if (response.isSuccessful()) {
+          return result;
+        } else {
+          throw new RestErrorException(result);
+        }
+      } catch (IOException e) {
+        throw new HttpConnectionException(e);
       }
-    } catch (IOException e) {
-      throw new HttpConnectionException(e);
     }
   }
 
