@@ -13,6 +13,8 @@ public final class SimpleHttpClientFactory implements IHttpClientFactory {
 
   public static boolean USE_LOGGING = false;
 
+  public static boolean NO_NAGLE_KEEP_ALIVE = true;
+
   private static final InetAddress LOCAL_HOST = getLoopbackAddress();
 
   private SimpleHttpClientFactory() {}
@@ -26,18 +28,22 @@ public final class SimpleHttpClientFactory implements IHttpClientFactory {
     OkHttpClient.Builder builder;
 
     if (USE_LOGGING) {
-      builder =
-              new OkHttpClient()
+      builder = new OkHttpClient()
                       .newBuilder()
                       .addInterceptor(
-                              HttpLoggingInterceptor.newBuilder()
-                                      .setLogHeader(context.getLogHeaders())
-                                      .setLogPayload(context.getLogPayload())
-                                      .setLogTimestamps(context.getLogTimestamps())
-                                      .build());
+                            HttpLoggingInterceptor.newBuilder()
+                              .setLogHeader(context.getLogHeaders())
+                              .setLogPayload(context.getLogPayload())
+                              .setLogTimestamps(context.getLogTimestamps())
+                              .build());
     } else {
-      builder = new OkHttpClient()
-              .newBuilder();
+        if (NO_NAGLE_KEEP_ALIVE) {
+          builder = new OkHttpClient().newBuilder()
+                  .socketFactory(new TcpSocketFactory())
+                  .sslSocketFactory(new TcpSSLSocketFactory(), TcpSSLSocketFactory.getDefaultTrustManager());
+        } else {
+          builder = new OkHttpClient().newBuilder();
+        }
     }
     Duration connectionTimeout = context.getConnectionTimeout();
     if (connectionTimeout != null) {
