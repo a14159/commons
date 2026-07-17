@@ -1,6 +1,7 @@
 package io.contek.invoker.commons.rest;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONException;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -27,6 +28,10 @@ public final class RestResponse {
 
   @Nullable
   public <T> T getAs(Class<T> type) throws RestParsingException {
-    return stringValue == null ? null : JSON.parseObject(stringValue, type);
+    try {
+      return stringValue == null ? null : JSON.parseObject(stringValue, type);
+    } catch (JSONException e) {
+      throw new RestParsingException(code, this, type, e);
+    }
   }
 }

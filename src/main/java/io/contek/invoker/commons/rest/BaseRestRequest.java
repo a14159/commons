@@ -8,8 +8,6 @@ import io.contek.invoker.security.ICredential;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import static java.util.Objects.requireNonNull;
-
 @NotThreadSafe
 public abstract class BaseRestRequest<R> {
 
@@ -25,7 +23,15 @@ public abstract class BaseRestRequest<R> {
     try (RequestContext context =
         actor.getRequestContext(getClass().getSimpleName())) {
       RestResponse response = call.submit(context.getClient());
-      R result = requireNonNull(response.getAs(getResponseType()));
+      Class<R> responseType = getResponseType();
+      R result = response.getAs(responseType);
+      if (result == null) {
+        throw new RestParsingException(
+            response.getCode(),
+            response,
+            responseType,
+            new IllegalStateException("REST response body is empty or null"));
+      }
       checkResult(result, response);
       return result;
     } catch (InterruptedException e) {

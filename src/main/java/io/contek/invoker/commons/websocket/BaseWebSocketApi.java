@@ -259,6 +259,11 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
   private final class Handler extends WebSocketListener {
 
     @Override
+    public void onClosing(WebSocket ws, int code, String reason) {
+      ws.close(code, reason);
+    }
+
+    @Override
     public void onClosed(WebSocket ws, int code, String reason) {
       log.info("Session #{} is closed: {} {}.", connectionId, code, reason);
       try {
