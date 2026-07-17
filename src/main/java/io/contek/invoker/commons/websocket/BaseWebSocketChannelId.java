@@ -28,7 +28,7 @@ public abstract class BaseWebSocketChannelId<M extends AnyWebSocketMessage> {
 
   @Override
   public final int hashCode() {
-    return Objects.hash(value);
+    return value.hashCode();
   }
 
   @Override

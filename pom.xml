@@ -42,6 +42,12 @@
             <artifactId>okhttp-jvm</artifactId>
             <version>5.4.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
+            <version>4.10.2</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>

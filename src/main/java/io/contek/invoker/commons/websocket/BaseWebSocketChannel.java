@@ -151,15 +151,15 @@ public abstract class BaseWebSocketChannel<
   }
 
   private void setState(SubscriptionState state) {
-    synchronized (stateHolder) {
-      synchronized (consumers) {
-          // noinspection ALL
-          for (int i = 0, consumersSize = consumers.size(); i < consumersSize; i++) {
-              ISubscribingConsumer<Data> consumer = consumers.get(i);
-              consumer.onStateChange(state);
-          }
+    synchronized (consumers) {
+      synchronized (stateHolder) {
+        // noinspection ALL
+        for (int i = 0, consumersSize = consumers.size(); i < consumersSize; i++) {
+          ISubscribingConsumer<Data> consumer = consumers.get(i);
+          consumer.onStateChange(state);
+        }
+        stateHolder.set(state);
       }
-      stateHolder.set(state);
     }
   }
 }
