@@ -1,0 +1,87 @@
+package io.contek.invoker.commons.actor.http;
+
+import okhttp3.OkHttpClient;
+
+import javax.annotation.concurrent.Immutable;
+import java.net.InetAddress;
+import java.time.Duration;
+
+import static java.net.InetAddress.getLoopbackAddress;
+
+@Immutable
+public final class HttpClientFactory implements IHttpClientFactory {
+
+  public static boolean USE_LOGGING = false;
+
+  public static boolean NO_NAGLE_KEEP_ALIVE = true;
+
+  private static final InetAddress LOCAL_HOST = getLoopbackAddress();
+
+  private final OkHttpClient baseClient;
+  private final OkHttpClient tcpBaseClient;
+
+  private HttpClientFactory() {
+    baseClient = new OkHttpClient();
+    // Deriving this template preserves the base client's dispatcher and connection pool.
+    tcpBaseClient =
+        baseClient
+            .newBuilder()
+            .socketFactory(new TcpSocketFactory())
+            .sslSocketFactory(
+                new TcpSSLSocketFactory(), TcpSSLSocketFactory.getDefaultTrustManager())
+            .build();
+  }
+
+  public static HttpClientFactory getInstance() {
+    return InstanceHolder.INSTANCE;
+  }
+
+  @Override
+  public IHttpClient create(IHttpContext context) {
+    OkHttpClient.Builder builder;
+
+    if (USE_LOGGING) {
+      builder =
+          baseClient
+              .newBuilder()
+              .addInterceptor(
+                  HttpLoggingInterceptor.newBuilder()
+                      .setLogHeader(context.getLogHeaders())
+                      .setLogPayload(context.getLogPayload())
+                      .setLogTimestamps(context.getLogTimestamps())
+                      .build());
+    } else if (NO_NAGLE_KEEP_ALIVE) {
+      builder = tcpBaseClient.newBuilder();
+    } else {
+      builder = baseClient.newBuilder();
+    }
+
+    Duration connectionTimeout = context.getConnectionTimeout();
+    if (connectionTimeout != null) {
+      builder.connectTimeout(connectionTimeout);
+    }
+
+    Duration readTimeout = context.getReadTimeout();
+    if (readTimeout != null) {
+      builder.readTimeout(readTimeout);
+    }
+
+    Duration writeTimeout = context.getWriteTimeout();
+    if (writeTimeout != null) {
+      builder.writeTimeout(writeTimeout);
+    }
+
+    Duration pingInterval = context.getPingInterval();
+    if (pingInterval != null) {
+      builder.pingInterval(pingInterval);
+    }
+
+    return new SimpleHttpClient(builder.build(), LOCAL_HOST);
+  }
+
+  @Immutable
+  private static final class InstanceHolder {
+
+    private static final HttpClientFactory INSTANCE = new HttpClientFactory();
+  }
+}
