@@ -26,16 +26,23 @@ public final class WebSocketSession {
 
   public void send(AnyWebSocketMessage message) {
     if (message instanceof IWebSocketRawTextMessage casted) {
-      ws.send(casted.getRawText());
+      send(casted.getRawText());
       return;
     }
 
     if (METRICS) {
       long startTime = System.nanoTime();
-      ws.send(JSON.toJSONString(message));
+      send(JSON.toJSONString(message));
       metrics.recordInvocation((System.nanoTime() - startTime) / 1000, true);
     } else {
-      ws.send(JSON.toJSONString(message));
+      send(JSON.toJSONString(message));
+    }
+  }
+
+  private void send(String message) {
+    if (!ws.send(message)) {
+      throw new WebSocketSessionInactiveException(
+          "Failed to enqueue WebSocket message: session is closing or closed, or the outgoing queue is full.");
     }
   }
 
