@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 @ThreadSafe
-public abstract class BaseWebSocketApi implements IWebSocketApi {
+public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
 
   private static final Logger log = LogManager.getLogger(BaseWebSocketApi.class);
 
@@ -253,6 +253,12 @@ public abstract class BaseWebSocketApi implements IWebSocketApi {
           });
     }
     log.debug("WS connection #{} is now deactivated", connectionId);
+  }
+
+  @Override
+  public final void close() {
+    deactivate();
+    scheduler.shutdownNow();
   }
 
   @ThreadSafe
