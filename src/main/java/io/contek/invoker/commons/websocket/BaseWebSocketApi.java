@@ -38,6 +38,8 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
   private final IWebSocketMessageParser parser;
   private final IWebSocketAuthenticator authenticator;
   private final IWebSocketLiveKeeper liveKeeper;
+  private final boolean hasAuthenticator;
+  private final boolean hasLiveKeeper;
 
   private final Handler handler = new Handler();
   private final ScheduledExecutorService scheduler = newSingleThreadScheduledExecutor();
@@ -62,6 +64,8 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
     this.parser = parser;
     this.authenticator = authenticator;
     this.liveKeeper = liveKeeper;
+    this.hasAuthenticator = authenticator != IWebSocketAuthenticator.noOp();
+    this.hasLiveKeeper = liveKeeper != IWebSocketLiveKeeper.noOp();
     this.connectionId = ++id;
   }
 
@@ -122,12 +126,16 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
       synchronized (sessionHolder) {
         WebSocketSession session = sessionHolder.get();
 
-        synchronized (liveKeeper) {
-          liveKeeper.onMessage(message, session);
+        if (hasLiveKeeper) {
+          synchronized (liveKeeper) {
+            liveKeeper.onMessage(message, session);
+          }
         }
-        synchronized (authenticator) {
-          if (!authenticator.isCompleted()) {
-            authenticator.onMessage(message, session);
+        if (hasAuthenticator) {
+          synchronized (authenticator) {
+            if (!authenticator.isCompleted()) {
+              authenticator.onMessage(message, session);
+            }
           }
         }
         synchronized (components) {
@@ -166,11 +174,15 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
       synchronized (components) {
         components.afterDisconnect();
       }
-      synchronized (liveKeeper) {
-        liveKeeper.afterDisconnect();
+      if (hasLiveKeeper) {
+        synchronized (liveKeeper) {
+          liveKeeper.afterDisconnect();
+        }
       }
-      synchronized (authenticator) {
-        authenticator.afterDisconnect();
+      if (hasAuthenticator) {
+        synchronized (authenticator) {
+          authenticator.afterDisconnect();
+        }
       }
     }
   }
@@ -199,22 +211,26 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
             return;
           }
 
-          synchronized (liveKeeper) {
-            try {
-              liveKeeper.onHeartbeat(session);
-            } catch (WebSocketSessionInactiveException e) {
-              log.warn("WebSocket session #{} is inactive {}", connectionId, e.getMessage());
-              session.close();
+          if (hasLiveKeeper) {
+            synchronized (liveKeeper) {
+              try {
+                liveKeeper.onHeartbeat(session);
+              } catch (WebSocketSessionInactiveException e) {
+                log.warn("WebSocket session #{} is inactive {}", connectionId, e.getMessage());
+                session.close();
+              }
             }
           }
 
-          synchronized (authenticator) {
-            if (authenticator.isPending()) {
-              return;
-            }
-            if (!authenticator.isCompleted()) {
-              authenticator.handshake(session);
-              return;
+          if (hasAuthenticator) {
+            synchronized (authenticator) {
+              if (authenticator.isPending()) {
+                return;
+              }
+              if (!authenticator.isCompleted()) {
+                authenticator.handshake(session);
+                return;
+              }
             }
           }
 
