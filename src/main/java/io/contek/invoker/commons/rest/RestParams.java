@@ -77,8 +77,9 @@ public final class RestParams {
       return this;
     }
 
+    @Deprecated
     public Builder add(String key, double value) {
-      return add(key, BigDecimal.valueOf(value).toPlainString());
+      return add(key, Double.toString(value));
     }
 
     public Builder add(String key, boolean value) {
