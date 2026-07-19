@@ -2,8 +2,6 @@ package io.contek.invoker.commons.websocket;
 
 
 import okio.ByteString;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -11,15 +9,15 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public abstract class WebSocketBinaryMessageParser implements IWebSocketMessageParser {
 
-  private static final Logger log = LogManager.getLogger(WebSocketBinaryMessageParser.class);
-
   @Override
   public final AnyWebSocketMessage parse(String text) {
     try {
       return fromText(text);
-    } catch (Throwable t) {
-      log.error("Failed to parse text message: {}.", text, t);
-      throw new WebSocketIllegalMessageException(t);
+    } catch (WebSocketRuntimeException e) {
+      throw e;
+    } catch (RuntimeException e) {
+      throw new WebSocketIllegalMessageException(
+          "Failed to parse text message: " + text + ".", e);
     }
   }
 
@@ -27,9 +25,11 @@ public abstract class WebSocketBinaryMessageParser implements IWebSocketMessageP
   public final AnyWebSocketMessage parse(ByteString bytes) {
     try {
       return fromBytes(bytes);
-    } catch (Throwable t) {
-      log.error("Failed to decode binary message: size {}.", bytes.size(), t);
-      throw new WebSocketIllegalMessageException(t);
+    } catch (WebSocketRuntimeException e) {
+      throw e;
+    } catch (RuntimeException e) {
+      throw new WebSocketIllegalMessageException(
+          "Failed to decode binary message: size " + bytes.size() + ".", e);
     }
   }
 

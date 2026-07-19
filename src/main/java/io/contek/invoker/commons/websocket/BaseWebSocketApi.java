@@ -141,9 +141,11 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
           components.onMessage(message, session);
         }
       }
-    } catch (Exception e) {
-      log.error("Failed to handle message: {}.", stringValue, e);
-      throw new WebSocketIllegalMessageException(e);
+    } catch (WebSocketRuntimeException e) {
+      throw e;
+    } catch (RuntimeException e) {
+      throw new WebSocketIllegalMessageException(
+          "Failed to handle message: " + stringValue + ".", e);
     }
   }
 
@@ -316,29 +318,49 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
             default -> log.error("Encountered unknown error for ws #{}: {}", connectionId, response, t);
         }
 
-      try {
-        log.info("Closing connection #{}.", connectionId);
-        ws.cancel();
-        afterDisconnect();
-        log.debug("Component states reset.");
-      } catch (Throwable t2) {
-        log.error("Failed to handle failure.", t2);
-      }
+      cleanupAfterFailure(ws);
     }
 
     @Override
     public void onMessage(WebSocket ws, String text) {
-      forwardMessage(text);
+      try {
+        forwardMessage(text);
+      } catch (Error e) {
+        try {
+          cleanupAfterFailure(ws);
+        } finally {
+          throw e;
+        }
+      }
     }
 
     @Override
-    public void onMessage(WebSocket webSocket, ByteString bytes) {
-      forwardMessage(bytes);
+    public void onMessage(WebSocket ws, ByteString bytes) {
+      try {
+        forwardMessage(bytes);
+      } catch (Error e) {
+        try {
+          cleanupAfterFailure(ws);
+        } finally {
+          throw e;
+        }
+      }
     }
 
     @Override
     public void onOpen(WebSocket ws, Response response) {
       log.info("WS {} connection #{} is open: {}.", actor.getCredential().isAnonymous() ? "public" : "private", connectionId, response);
+    }
+
+    private void cleanupAfterFailure(WebSocket ws) {
+      try {
+        log.info("Closing connection #{}.", connectionId);
+        ws.cancel();
+        afterDisconnect();
+        log.debug("Component states reset.");
+      } catch (Throwable t) {
+        log.error("Failed to handle failure.", t);
+      }
     }
   }
 }
