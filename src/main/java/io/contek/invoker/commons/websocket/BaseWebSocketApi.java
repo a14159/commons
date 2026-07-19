@@ -103,25 +103,24 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
       throws WebSocketRuntimeException;
 
   private void forwardMessage(String text) {
+    AnyWebSocketMessage message;
     if (METRICS) {
       long startTime = System.nanoTime();
-      ParseResult result = parser.parse(text);
+      message = parser.parse(text);
       metrics.recordInvocation((System.nanoTime() - startTime) / 1000, true);
-      forwardMessage(result);
     } else {
-      ParseResult result = parser.parse(text);
-      forwardMessage(result);
+      message = parser.parse(text);
     }
+    forwardMessage(message, text);
   }
 
   private void forwardMessage(ByteString bytes) {
-    ParseResult result = parser.parse(bytes.toByteArray());
-    forwardMessage(result);
+    AnyWebSocketMessage message = parser.parse(bytes);
+    forwardMessage(message, "binary");
   }
 
-  private void forwardMessage(ParseResult result) {
+  private void forwardMessage(AnyWebSocketMessage message, String stringValue) {
     try {
-      AnyWebSocketMessage message = result.getMessage();
       checkErrorMessage(message);
       synchronized (sessionHolder) {
         WebSocketSession session = sessionHolder.get();
@@ -143,7 +142,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
         }
       }
     } catch (Exception e) {
-      log.error("Failed to handle message: {}.", result.getStringValue(), e);
+      log.error("Failed to handle message: {}.", stringValue, e);
       throw new WebSocketIllegalMessageException(e);
     }
   }

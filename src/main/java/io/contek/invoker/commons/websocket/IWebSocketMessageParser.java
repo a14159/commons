@@ -1,13 +1,15 @@
 package io.contek.invoker.commons.websocket;
 
+import okio.ByteString;
+
 import javax.annotation.concurrent.ThreadSafe;
 
 @ThreadSafe
 public interface IWebSocketMessageParser {
 
-  ParseResult parse(String text);
+  AnyWebSocketMessage parse(String text);
 
-  ParseResult parse(byte[] bytes);
+  AnyWebSocketMessage parse(ByteString bytes);
 
   void register(IWebSocketComponent component);
 }

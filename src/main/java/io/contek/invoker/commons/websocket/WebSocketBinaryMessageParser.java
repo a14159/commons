@@ -1,6 +1,7 @@
 package io.contek.invoker.commons.websocket;
 
 
+import okio.ByteString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,10 +14,9 @@ public abstract class WebSocketBinaryMessageParser implements IWebSocketMessageP
   private static final Logger log = LogManager.getLogger(WebSocketBinaryMessageParser.class);
 
   @Override
-  public final ParseResult parse(String text) {
+  public final AnyWebSocketMessage parse(String text) {
     try {
-      AnyWebSocketMessage message = fromText(text);
-      return new ParseResult(text, message);
+      return fromText(text);
     } catch (Throwable t) {
       log.error("Failed to parse text message: {}.", text, t);
       throw new WebSocketIllegalMessageException(t);
@@ -24,12 +24,11 @@ public abstract class WebSocketBinaryMessageParser implements IWebSocketMessageP
   }
 
   @Override
-  public final ParseResult parse(byte[] bytes) {
+  public final AnyWebSocketMessage parse(ByteString bytes) {
     try {
-      AnyWebSocketMessage message = fromBytes(bytes);
-      return new ParseResult("binary", message);
+      return fromBytes(bytes);
     } catch (Throwable t) {
-      log.error("Failed to decode binary message: size {}.", bytes.length, t);
+      log.error("Failed to decode binary message: size {}.", bytes.size(), t);
       throw new WebSocketIllegalMessageException(t);
     }
   }
@@ -38,7 +37,7 @@ public abstract class WebSocketBinaryMessageParser implements IWebSocketMessageP
     throw new UnsupportedOperationException();
   }
 
-  protected AnyWebSocketMessage fromBytes(byte[] bytes) {
+  protected AnyWebSocketMessage fromBytes(ByteString bytes) {
     throw new UnsupportedOperationException();
   }
 }

@@ -1,6 +1,7 @@
 package io.contek.invoker.commons.websocket;
 
 
+import okio.ByteString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,10 +14,9 @@ public abstract class WebSocketTextMessageParser implements IWebSocketMessagePar
   private static final Logger log = LogManager.getLogger(WebSocketTextMessageParser.class);
 
   @Override
-  public final ParseResult parse(String text) {
+  public final AnyWebSocketMessage parse(String text) {
     try {
-      AnyWebSocketMessage message = fromText(text);
-      return new ParseResult(text, message);
+      return fromText(text);
     } catch (Throwable t) {
       log.error("Failed to parse text message: {}.", text, t);
       throw new WebSocketIllegalMessageException(t);
@@ -24,7 +24,7 @@ public abstract class WebSocketTextMessageParser implements IWebSocketMessagePar
   }
 
   @Override
-  public final ParseResult parse(byte[] bytes) {
+  public final AnyWebSocketMessage parse(ByteString bytes) {
     throw new UnsupportedOperationException();
   }
 
