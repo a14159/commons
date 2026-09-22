@@ -347,7 +347,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
     public void onMessage(WebSocket ws, String text) {
       try {
         forwardMessage(text);
-      } catch (Error e) {
+      } catch (RuntimeException | Error e) {
         try {
           cleanupAfterFailure(ws);
         } finally {
@@ -360,7 +360,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
     public void onMessage(WebSocket ws, ByteString bytes) {
       try {
         forwardMessage(bytes);
-      } catch (Error e) {
+      } catch (RuntimeException | Error e) {
         try {
           cleanupAfterFailure(ws);
         } finally {
