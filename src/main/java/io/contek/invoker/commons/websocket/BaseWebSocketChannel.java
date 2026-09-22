@@ -88,14 +88,16 @@ public abstract class BaseWebSocketChannel<
   @Override
   public final void onMessage(AnyWebSocketMessage message, WebSocketSession session) {
     Message casted = tryCast(message);
-    if (casted != null) {
-      Data data = getData(casted);
-      synchronized (consumers) {
-        // noinspection ALL
-        for (int i = 0, cSize = consumers.size(); i < cSize; i++) {
-          ISubscribingConsumer<Data> consumer = consumers.get(i);
-          consumer.onNext(data);
-        }
+    if (casted == null) {
+      return;
+    }
+
+    Data data = getData(casted);
+    synchronized (consumers) {
+      // noinspection ALL
+      for (int i = 0, cSize = consumers.size(); i < cSize; i++) {
+        ISubscribingConsumer<Data> consumer = consumers.get(i);
+        consumer.onNext(data);
       }
     }
 
