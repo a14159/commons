@@ -19,6 +19,7 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
@@ -47,6 +48,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
   private final AtomicReference<WebSocketSession> sessionHolder = new AtomicReference<>();
   private final AtomicReference<ScheduledFuture<?>> scheduleHolder = new AtomicReference<>();
   private final WebSocketComponentManager components = new WebSocketComponentManager();
+  private final AtomicBoolean closed = new AtomicBoolean();
 
   private static final MetricsRecorder metrics = MetricsRecorder.getRecorder("e2eLatency#parseJson");
   static {
@@ -75,13 +77,19 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
     }
   }
 
+  /**
+   * @throws IllegalStateException if this API is already closed
+   */
   @Override
   public final void attach(IWebSocketComponent component) {
+    if (closed.get()) {
+      throw new IllegalStateException("WebSocket API is closed");
+    }
     synchronized (components) {
       parser.register(component);
       components.attach(component);
-      activate();
     }
+    activate();
     log.info("Attaching subscription {} to ws connection #{}", component, connectionId);
   }
 
@@ -151,21 +159,25 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
 
   private void connect() {
     synchronized (sessionHolder) {
-      sessionHolder.updateAndGet(
-          oldValue -> {
-            if (oldValue != null) {
-              return oldValue;
-            }
-            WebSocketCall call = createCall(actor.getCredential());
-            try (RequestContext context =
-                actor.getRequestContext(getClass().getSimpleName())) {
-              WebSocketSession session = call.submit(context.getClient(), handler);
-              activate();
-              return session;
-            } catch (InterruptedException e) {
-              throw new HttpInterruptedException(e);
-            }
-          });
+      if (closed.get() || sessionHolder.get() != null) {
+        return;
+      }
+      WebSocketCall call = createCall(actor.getCredential());
+      try (RequestContext context =
+          actor.getRequestContext(getClass().getSimpleName())) {
+        WebSocketSession session = call.submit(context.getClient(), handler);
+        // Publish before checking closed so close() cannot miss the new session.
+        sessionHolder.set(session);
+        if (!closed.get()) {
+          activate();
+          return;
+        }
+        if (sessionHolder.compareAndSet(session, null)) {
+          session.close();
+        }
+      } catch (InterruptedException e) {
+        throw new HttpInterruptedException(e);
+      }
     }
   }
 
@@ -245,6 +257,9 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
 
   private void activate() {
     synchronized (scheduleHolder) {
+      if (closed.get()) {
+        return;
+      }
       scheduleHolder.updateAndGet(
           oldValue -> {
             if (oldValue != null && !oldValue.isDone()) {
@@ -274,8 +289,15 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
 
   @Override
   public final void close() {
+    if (!closed.compareAndSet(false, true)) {
+      return;
+    }
     deactivate();
     scheduler.shutdownNow();
+    WebSocketSession session = sessionHolder.getAndSet(null);
+    if (session != null) {
+      session.close();
+    }
   }
 
   @ThreadSafe
