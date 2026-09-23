@@ -4,10 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 import static io.contek.invoker.commons.websocket.ConsumerState.*;
@@ -22,8 +22,9 @@ public abstract class BaseWebSocketChannel<
 
   private final Id id;
 
-  private final AtomicReference<SubscriptionState> stateHolder =
-      new AtomicReference<>(UNSUBSCRIBED);
+  private final Object stateLock = new Object();
+  @GuardedBy("stateLock")
+  private SubscriptionState state = UNSUBSCRIBED;
   private final List<ISubscribingConsumer<Data>> consumers = new ArrayList<>();
 
   protected BaseWebSocketChannel(Id id) {
@@ -37,8 +38,7 @@ public abstract class BaseWebSocketChannel<
   @Override
   public final void addConsumer(ISubscribingConsumer<Data> consumer) {
     synchronized (consumers) {
-      synchronized (stateHolder) {
-        SubscriptionState state = stateHolder.get();
+      synchronized (stateLock) {
         consumer.onStateChange(state);
       }
       consumers.add(consumer);
@@ -50,8 +50,8 @@ public abstract class BaseWebSocketChannel<
     synchronized (consumers) {
       ConsumerState childConsumerState = getChildConsumerState();
 
-      synchronized (stateHolder) {
-        SubscriptionState currentState = stateHolder.get();
+      synchronized (stateLock) {
+        SubscriptionState currentState = state;
         SubscriptionState newState = null;
         if (currentState == SUBSCRIBED && childConsumerState == IDLE) {
           log.debug("Unsubscribing channel {}.", id);
@@ -80,8 +80,8 @@ public abstract class BaseWebSocketChannel<
       return ACTIVE;
     }
 
-    synchronized (stateHolder) {
-      return stateHolder.get() != UNSUBSCRIBED ? ACTIVE : IDLE;
+    synchronized (stateLock) {
+      return state != UNSUBSCRIBED ? ACTIVE : IDLE;
     }
   }
 
@@ -154,13 +154,13 @@ public abstract class BaseWebSocketChannel<
 
   private void setState(SubscriptionState state) {
     synchronized (consumers) {
-      synchronized (stateHolder) {
+      synchronized (stateLock) {
         // noinspection ALL
         for (int i = 0, consumersSize = consumers.size(); i < consumersSize; i++) {
           ISubscribingConsumer<Data> consumer = consumers.get(i);
           consumer.onStateChange(state);
         }
-        stateHolder.set(state);
+        this.state = state;
       }
     }
   }

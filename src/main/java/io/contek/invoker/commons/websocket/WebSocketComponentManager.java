@@ -57,10 +57,8 @@ final class WebSocketComponentManager {
       }
     }
     if (somethingChanged) {
-      synchronized (removePredicate) {
-        removePredicate.init(toRemoveIdle);
-        idle.removeIf(removePredicate);
-      }
+      removePredicate.init(toRemoveIdle);
+      idle.removeIf(removePredicate);
     }
     long toRemoveActive = 0;
     somethingChanged = false;
@@ -75,10 +73,8 @@ final class WebSocketComponentManager {
       }
     }
     if (somethingChanged) {
-      synchronized (removePredicate) {
-        removePredicate.init(toRemoveActive);
-        active.removeIf(removePredicate);
-      }
+      removePredicate.init(toRemoveActive);
+      active.removeIf(removePredicate);
     }
   }
 

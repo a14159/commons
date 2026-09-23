@@ -12,6 +12,7 @@ import okio.ByteString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.EOFException;
 import java.io.IOException;
@@ -46,7 +47,9 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
   private final ScheduledExecutorService scheduler = newSingleThreadScheduledExecutor();
 
   private final AtomicReference<WebSocketSession> sessionHolder = new AtomicReference<>();
-  private final AtomicReference<ScheduledFuture<?>> scheduleHolder = new AtomicReference<>();
+  private final Object scheduleLock = new Object();
+  @GuardedBy("scheduleLock")
+  private ScheduledFuture<?> schedule;
   private final WebSocketComponentManager components = new WebSocketComponentManager();
   private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -72,8 +75,8 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
   }
 
   public final boolean isActive() {
-    synchronized (sessionHolder) {
-      return scheduleHolder.get() != null;
+    synchronized (scheduleLock) {
+      return schedule != null;
     }
   }
 
@@ -256,33 +259,24 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
   }
 
   private void activate() {
-    synchronized (scheduleHolder) {
+    synchronized (scheduleLock) {
       if (closed.get()) {
         return;
       }
-      scheduleHolder.updateAndGet(
-          oldValue -> {
-            if (oldValue != null && !oldValue.isDone()) {
-              return oldValue;
-            }
-            log.debug("WS connection #{} is now active", connectionId);
-            return scheduler.scheduleWithFixedDelay(this::heartbeat, 0, 1, TimeUnit.SECONDS);
-          });
+      if (schedule != null && !schedule.isDone()) {
+        return;
+      }
+      log.debug("WS connection #{} is now active", connectionId);
+      schedule = scheduler.scheduleWithFixedDelay(this::heartbeat, 0, 1, TimeUnit.SECONDS);
     }
   }
 
   private void deactivate() {
-    synchronized (scheduleHolder) {
-      scheduleHolder.updateAndGet(
-          oldValue -> {
-            if (oldValue == null) {
-              return null;
-            }
-            if (!oldValue.isDone()) {
-              oldValue.cancel(true);
-            }
-            return null;
-          });
+    synchronized (scheduleLock) {
+      if (schedule != null && !schedule.isDone()) {
+        schedule.cancel(true);
+      }
+      schedule = null;
     }
     log.debug("WS connection #{} is now deactivated", connectionId);
   }
