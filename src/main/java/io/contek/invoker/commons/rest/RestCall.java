@@ -5,7 +5,6 @@ import io.contek.invoker.commons.actor.http.IHttpClient;
 import okhttp3.Headers;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -40,9 +39,7 @@ public final class RestCall {
     Request request = createRequest();
     try (Response response = client.submit(request)) {
       try {
-        ResponseBody body = response.body();
-        String bodyString = body == null ? null : body.string();
-        RestResponse result = new RestResponse(response.code(), bodyString);
+        RestResponse result = new RestResponse(response.code(), response.body());
         if (response.isSuccessful()) {
           return result;
         } else {
