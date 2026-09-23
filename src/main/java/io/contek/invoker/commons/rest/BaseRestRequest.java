@@ -11,6 +11,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 @NotThreadSafe
 public abstract class BaseRestRequest<R> {
 
+  private final String requestName = getClass().getSimpleName();
   private final IActor actor;
 
   protected BaseRestRequest(IActor actor) {
@@ -20,8 +21,7 @@ public abstract class BaseRestRequest<R> {
   public final R submit() throws AnyHttpException {
     RestCall call = createCall(actor.getCredential());
 
-    try (RequestContext context =
-        actor.getRequestContext(getClass().getSimpleName())) {
+    try (RequestContext context = actor.getRequestContext(requestName)) {
       RestResponse response = call.submit(context.getClient());
       Class<R> responseType = getResponseType();
       R result = response.getAs(responseType);

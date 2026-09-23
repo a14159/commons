@@ -36,6 +36,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
 
   private final int connectionId;
 
+  private final String requestName = getClass().getSimpleName();
   private final IActor actor;
   private final IWebSocketMessageParser parser;
   private final IWebSocketAuthenticator authenticator;
@@ -166,8 +167,7 @@ public abstract class BaseWebSocketApi implements IWebSocketApi, AutoCloseable {
         return;
       }
       WebSocketCall call = createCall(actor.getCredential());
-      try (RequestContext context =
-          actor.getRequestContext(getClass().getSimpleName())) {
+      try (RequestContext context = actor.getRequestContext(requestName)) {
         WebSocketSession session = call.submit(context.getClient(), handler);
         // Publish before checking closed so close() cannot miss the new session.
         sessionHolder.set(session);
