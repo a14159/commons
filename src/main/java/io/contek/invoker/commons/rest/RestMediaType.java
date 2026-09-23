@@ -3,6 +3,8 @@ package io.contek.invoker.commons.rest;
 import okhttp3.MediaType;
 
 import javax.annotation.concurrent.Immutable;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -37,6 +39,6 @@ public enum RestMediaType {
   }
 
   private static String toFormString(RestParams params) {
-    return params.getQueryString();
+    return params.getQueryString(value -> URLEncoder.encode(value, StandardCharsets.UTF_8));
   }
 }
