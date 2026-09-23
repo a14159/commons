@@ -38,9 +38,13 @@ public final class HttpClientFactory implements IHttpClientFactory {
 
   @Override
   public IHttpClient create(IHttpContext context) {
+    return create(context, USE_LOGGING, NO_NAGLE_KEEP_ALIVE);
+  }
+
+  IHttpClient create(IHttpContext context, boolean useLogging, boolean noNagleKeepAlive) {
     OkHttpClient.Builder builder;
 
-    if (USE_LOGGING) {
+    if (useLogging) {
       builder =
           baseClient
               .newBuilder()
@@ -50,7 +54,7 @@ public final class HttpClientFactory implements IHttpClientFactory {
                       .setLogPayload(context.getLogPayload())
                       .setLogTimestamps(context.getLogTimestamps())
                       .build());
-    } else if (NO_NAGLE_KEEP_ALIVE) {
+    } else if (noNagleKeepAlive) {
       builder = tcpBaseClient.newBuilder();
     } else {
       builder = baseClient.newBuilder();
