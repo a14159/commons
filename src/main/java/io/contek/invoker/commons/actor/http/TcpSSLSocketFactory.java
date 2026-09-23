@@ -12,23 +12,28 @@ import java.security.NoSuchAlgorithmException;
 
 public class TcpSSLSocketFactory extends SSLSocketFactory {
 
-  private final SSLSocketFactory delegate;
+  private static final X509TrustManager DEFAULT_TRUST_MANAGER = createDefaultTrustManager();
+  private static final SSLSocketFactory DELEGATE = createDefaultSocketFactory();
 
-  public TcpSSLSocketFactory() {
+  private static SSLSocketFactory createDefaultSocketFactory() {
     SSLContext sslContext;
     try {
       sslContext = SSLContext.getInstance("TLS");
-      sslContext.init(null, null, null);
+      sslContext.init(null, new TrustManager[] {DEFAULT_TRUST_MANAGER}, null);
     } catch (NoSuchAlgorithmException e) {
       System.err.println("No such algorithm.");
       throw new RuntimeException(e);
     } catch (KeyManagementException e) {
       throw new RuntimeException(e);
     }
-    this.delegate = sslContext.getSocketFactory();
+    return sslContext.getSocketFactory();
   }
 
   public static X509TrustManager getDefaultTrustManager() {
+    return DEFAULT_TRUST_MANAGER;
+  }
+
+  private static X509TrustManager createDefaultTrustManager() {
     try {
       TrustManagerFactory tmf = TrustManagerFactory.getInstance(
         TrustManagerFactory.getDefaultAlgorithm()
@@ -48,38 +53,38 @@ public class TcpSSLSocketFactory extends SSLSocketFactory {
 
   @Override
   public String[] getDefaultCipherSuites() {
-    return delegate.getDefaultCipherSuites();
+    return DELEGATE.getDefaultCipherSuites();
   }
 
   @Override
   public String[] getSupportedCipherSuites() {
-    return delegate.getSupportedCipherSuites();
+    return DELEGATE.getSupportedCipherSuites();
   }
 
   @Override
   public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
-    return configure(delegate.createSocket(s, host, port, autoClose));
+    return configure(DELEGATE.createSocket(s, host, port, autoClose));
   }
 
   @Override
   public Socket createSocket(String host, int port) throws IOException {
-    return configure(delegate.createSocket(host, port));
+    return configure(DELEGATE.createSocket(host, port));
   }
 
   @Override
   public Socket createSocket(String host, int port,
                                InetAddress local, int localPort) throws IOException {
-    return configure(delegate.createSocket(host, port, local, localPort));
+    return configure(DELEGATE.createSocket(host, port, local, localPort));
   }
 
   @Override
   public Socket createSocket(InetAddress host, int port) throws IOException {
-    return configure(delegate.createSocket(host, port));
+    return configure(DELEGATE.createSocket(host, port));
   }
 
   @Override
   public Socket createSocket(InetAddress host, int port,
                              InetAddress local, int localPort) throws IOException {
-    return configure(delegate.createSocket(host, port, local, localPort));
+    return configure(DELEGATE.createSocket(host, port, local, localPort));
   }
 }
