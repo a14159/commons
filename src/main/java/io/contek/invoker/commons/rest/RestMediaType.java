@@ -34,6 +34,10 @@ public enum RestMediaType {
     return new RestMediaBody(value, composer.apply(params));
   }
 
+  public RestMediaBody createBody(String stringValue) {
+    return new RestMediaBody(value, stringValue);
+  }
+
   private static String toJsonString(RestParams params) {
     return com.alibaba.fastjson2.JSON.toJSONString(params.getValues());
   }
